@@ -1,0 +1,60 @@
+import { create } from "zustand";
+import { useDashboardProps } from "./types";
+import { toast } from "sonner";
+import { api } from "@/lib/axios";
+import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
+import { GetTokenUser } from "@/shared/utils/getTokenUser";
+
+export const useDashboard = create<useDashboardProps>((set) => ({
+  changePasswordIsLoading: false,
+  setChangePasswordIsLoading: (changePasswordIsLoading: boolean) =>
+    set({ changePasswordIsLoading }),
+
+  ChangePasswordFristAcessModal: false,
+  SetChangePasswordFristAcessModal: (ChangePasswordFristAcessModal: boolean) =>
+    set({ ChangePasswordFristAcessModal }),
+
+  handleChangePasswordFirstAcess: async ({ data }) => {
+    const { setChangePasswordIsLoading, SetChangePasswordFristAcessModal } =
+      useDashboard.getState();
+    const { user } = useLogin.getState();
+
+    try {
+      setChangePasswordIsLoading(true);
+      const token = GetTokenUser();
+
+      const adapterChangePassword = {
+        newPassword: data.password,
+      };
+      await api.put(`/users/password/${user?._id}`, adapterChangePassword, {
+        headers: {
+          Authorization: `${token}`,
+        },
+      });
+
+      const adaperUpdateUser = {
+        ...user,
+        firstLogin: false,
+      };
+
+      api.put(`users/edit/${user?._id}`, adaperUpdateUser, {
+        headers: {
+          Authorization: `${token}`,
+        },
+      });
+
+      SetChangePasswordFristAcessModal(false);
+      toast.success("Senha alterada com sucesso", {
+        description: "Sua senha foi alterada e você já pode acessar o sistema",
+      });
+
+      console.log("enviou");
+    } catch (error: any) {
+      toast.error("Erro ao enviar o email", {
+        description: error?.response?.data?.error,
+      });
+    } finally {
+      setChangePasswordIsLoading(false);
+    }
+  },
+}));
