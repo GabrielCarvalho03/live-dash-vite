@@ -108,7 +108,7 @@ export const useLogin = create<LoginType>((set) => ({
       return;
     }
 
-    const token = localStorage.getItem("liveToken");
+    const token = GetTokenUser();
 
     if (!token) {
       console.log("Token não encontrado");
@@ -146,6 +146,7 @@ export const useLogin = create<LoginType>((set) => ({
   logout: async (route) => {
     const { setUser, user } = useLogin.getState();
     const token = GetTokenUser();
+    const refreshToken = localStorage.getItem("liveRefreshToken");
     try {
       await api.put(
         `/users/edit/${user?._id}`,
@@ -167,6 +168,7 @@ export const useLogin = create<LoginType>((set) => ({
 
     Cookies.remove("liveToken", { path: "/", secure: true, sameSite: "None" });
     localStorage.removeItem("liveToken");
+    localStorage.removeItem("liveRefreshToken");
     setUser(null);
     window.location.href = "/";
   },

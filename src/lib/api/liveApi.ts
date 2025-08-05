@@ -4,9 +4,11 @@ import { jwtDecode } from "jwt-decode";
 import dayjs from "dayjs";
 import { useAuthStore } from "@/shared/hooks/Auth/useAuth";
 
-const baseURL = import.meta.env.VITE_API_URL;
+const baseURL = import.meta.env.VITE_LIVE_API_URL;
 
-export const api = axios.create({
+console.log("baseURL", baseURL);
+
+export const LiveApi = axios.create({
   baseURL,
   withCredentials: true,
   headers: {
@@ -16,7 +18,7 @@ export const api = axios.create({
 let isRefreshing = false;
 let waiters: ((token: string) => void)[] = [];
 
-api.interceptors.request.use(async (req) => {
+LiveApi.interceptors.request.use(async (req) => {
   const token = GetTokenUser();
   const refreshToken = localStorage.getItem("liveRefreshToken");
   const isPublicRoute = ["/", "/login", "/signup"].includes(

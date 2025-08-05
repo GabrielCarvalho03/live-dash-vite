@@ -14,9 +14,24 @@ import {
   Play,
   Trash,
   ChevronDown,
+  Loader2,
+  Blocks,
+  Video,
+  Package,
 } from "lucide-react";
-import { CreateLiveStepsModal } from "../components/createLiveSteps/live/createLiveSteps";
+import { CreateLiveStepsModal } from "../components/createLiveSteps/createLiveSteps";
 import { useLive } from "../hooks/useLive";
+import { useEffect } from "react";
+import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
+import dayjs from "dayjs";
+import { Loader } from "@/shared/components/loader/loader";
+import { StatusLive } from "../components/statusLive/statusLive";
+import { CategorieLive } from "../components/categorieLive/categorieLive";
+import { ProductVinculationModal } from "../components/createLiveSteps/products/form";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { TabsContent } from "@radix-ui/react-tabs";
+import LiveContent from "../components/liveContent/liveContent";
+import ProductsContent from "../components/productsContent/productsContent";
 
 const livesMock = [
   {
@@ -57,15 +72,44 @@ const livesMock = [
 export default function Lives() {
   const {
     modalCreateLiveIsOpen,
+    liveList,
     setModalCreateLiveIsOpen,
     handleOpenCreateLiveModal,
+    handleGetLive,
   } = useLive();
 
   const resumo = {
-    aoVivo: livesMock.filter((l) => l.status === "AO VIVO").length,
-    agendadas: livesMock.filter((l) => l.status === "Agendada").length,
+    aoVivo: livesMock.filter((l) => l.status === "live").length,
+    agendadas: livesMock.filter((l) => l.status === "scheduled").length,
     totalViews: livesMock.reduce((acc, l) => acc + l.views, 0),
   };
+
+  const { user, loginisLoading, setUser, handleGetUserById } = useLogin();
+  const {
+    openVinculationProductModal,
+    setLiveEditObject,
+    setOpenVinculationProductModal,
+  } = useLive();
+
+  useEffect(() => {
+    if (!user?._id) {
+      GetDataForPage();
+    }
+    if (!liveList) {
+      handleGetLive();
+    }
+  }, []);
+
+  const GetDataForPage = async () => {
+    const user = await handleGetUserById();
+    setUser(user);
+
+    await handleGetLive();
+  };
+
+  // if (getAllUserIsLoading) {
+  //   return <Loader />;
+  // }
 
   return (
     <div className="space-y-6">
@@ -80,7 +124,7 @@ export default function Lives() {
           className="bg-primary text-white hover:bg-primary/90"
           onClick={() => handleOpenCreateLiveModal()}
         >
-          <Plus className="w-4 h-4 mr-2" /> Nova Lives
+          <Plus className="w-4 h-4 mr-2" /> Nova Live
         </Button>
       </div>
 
@@ -124,103 +168,24 @@ export default function Lives() {
         </Card>
       </div>
 
-      <div className="flex items-center gap-4 mt-4 flex-wrap">
-        <Input placeholder="Buscar lives..." className="flex-grow max-w-xs" />
-        <div className="flex items-center gap-2 whitespace-nowrap">
-          <Filter className="w-5 h-5 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Filtros:</span>
-        </div>
-        <Button variant="outline" size="sm" className="flex items-center gap-1">
-          Todos <ChevronDown className="w-4 h-4" />
-        </Button>
-        <Button variant="outline" size="sm" className="flex items-center gap-1">
-          Todas <ChevronDown className="w-4 h-4" />
-        </Button>
-      </div>
-      <div className="w-full">
-        <div className="hidden md:grid md:grid-cols-6 bg-gray-50 px-6 py-3 text-sm font-semibold text-gray-700 border-b">
-          <span className="text-left">Live</span>
-          <span className="text-left">Status</span>
-          <span className="text-left">Categoria</span>
-          <span className="text-left">Data/Hora</span>
-          <span className="text-left">Visualizações</span>
-          <span className="text-left">Ações</span>
-        </div>
-
-        {livesMock.map((live, index) => (
-          <div
-            key={index}
-            className="flex flex-col md:grid md:grid-cols-6 px-4 md:px-6 py-4 text-sm text-gray-700 border-b hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex flex-col mb-2 md:mb-0">
-              <span className="font-medium text-gray-900">{live.title}</span>
-              <span className="text-xs text-gray-500">{live.description}</span>
-
-              {(live.status === "AO VIVO" || live.status === "Agendada") && (
-                <div className="mt-2 text-xs bg-yellow-100 text-yellow-900 p-2 border border-yellow-400 rounded-md w-fit max-w-full leading-tight">
-                  <p>
-                    <strong>🔑 OBS:</strong> {live.streamKey}
-                  </p>
-                  <p>
-                    <strong>📡 RTMP:</strong> {live.rtmpUrl}
-                  </p>
-                  <p className="text-[10px] text-yellow-800 italic mt-1">
-                    *Copie no OBS para transmitir*
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="mb-2 md:mb-0">
-              <Badge
-                className={
-                  live.status === "AO VIVO"
-                    ? "bg-red-500 text-white"
-                    : live.status === "Agendada"
-                    ? "bg-blue-500 text-white"
-                    : "bg-green-500 text-white"
-                }
-              >
-                {live.status}
-              </Badge>
-            </div>
-
-            <div className="mb-2 md:mb-0">
-              <span className="inline-block text-xs bg-gray-100 px-2 py-0.5 rounded border border-gray-300 text-gray-700">
-                {live.category}
-              </span>
-            </div>
-
-            <div className="mb-2 md:mb-0">
-              <span>{live.datetime}</span>
-            </div>
-
-            <div className="mb-2 md:mb-0">
-              <span>{live.views.toLocaleString()}</span>
-            </div>
-
-            <div className="flex gap-2 items-center">
-              <Button size="icon" variant="ghost">
-                <Pencil className="w-4 h-4" />
-              </Button>
-              {live.status === "AO VIVO" ? (
-                <Button size="icon" variant="ghost">
-                  <Play className="w-4 h-4 text-blue-600" />
-                </Button>
-              ) : (
-                <Button size="icon" variant="ghost">
-                  <Trash className="w-4 h-4 text-red-600" />
-                </Button>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <CreateLiveStepsModal
-        isOpen={modalCreateLiveIsOpen}
-        onClose={() => setModalCreateLiveIsOpen(false)}
-      />
+      <Tabs defaultValue="lives" className="w-full  ">
+        <TabsList className="grid w-full grid-cols-2   ">
+          <TabsTrigger value="lives" className="flex items-center gap-2  ">
+            <Video className="w-4 h-4" />
+            Lives
+          </TabsTrigger>
+          <TabsTrigger value="products" className="flex items-center gap-2">
+            <Package className="w-4 h-4" />
+            Produtos
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="lives" className="space-y-4">
+          <LiveContent />
+        </TabsContent>
+        <TabsContent value="products" className="space-y-4">
+          <ProductsContent />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -15,28 +15,21 @@ import { UseFormRegister } from "react-hook-form";
 import { LiveCreateSchemaData } from "../../hooks/liveCreateSchema";
 
 type CalendarProps = {
-  defaultDate?: Date;
   name: string;
-  register: UseFormRegister<LiveCreateSchemaData>;
+  value?: Date;
+  onChange?: (date: Date | undefined) => void;
+  DayOfDate?: boolean;
 };
 
-export function Calender({ defaultDate, name, register }: CalendarProps) {
-  const [date, setDate] = React.useState<Date | undefined>(defaultDate);
+export function Calender({ value, onChange, DayOfDate }: CalendarProps) {
+  const [date, setDate] = React.useState<Date | undefined>(value);
 
   React.useEffect(() => {
-    if (defaultDate) {
-      setDate(defaultDate);
-    }
-  }, [defaultDate]);
+    setDate(value);
+  }, [value]);
 
   return (
     <>
-      <input
-        type="hidden"
-        value={date ? date.toISOString() : ""}
-        {...register("date")}
-      />
-
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -53,9 +46,23 @@ export function Calender({ defaultDate, name, register }: CalendarProps) {
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0">
-          <Calendar mode="single" selected={date} onSelect={setDate} />
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={(d) => {
+              setDate(d);
+              onChange?.(d);
+            }}
+            locale={ptBR}
+          />
         </PopoverContent>
       </Popover>
+
+      {DayOfDate && date && (
+        <span className="ml-2 text-sm text-muted-foreground">
+          {format(date, "EEEE", { locale: ptBR })}
+        </span>
+      )}
     </>
   );
 }
