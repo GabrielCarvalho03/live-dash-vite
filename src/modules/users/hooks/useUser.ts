@@ -67,6 +67,7 @@ export const useUser = create<RegisterType>((set) => ({
       permitions: data.permitions,
       status: "Active" as const,
       firstLogin: true,
+      hourFuse: "brasilia",
     };
 
     try {

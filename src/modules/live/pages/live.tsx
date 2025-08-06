@@ -32,6 +32,17 @@ import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { TabsContent } from "@radix-ui/react-tabs";
 import LiveContent from "../components/liveContent/liveContent";
 import ProductsContent from "../components/productsContent/productsContent";
+import {
+  Select,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectLabel,
+} from "@/shared/components/ui/select";
+import { useVinculationProductsLive } from "../hooks/useVinculationProducts";
+import { DeleteConfirmModal } from "@/shared/components/deleteConfirmModal/deleteConfirmModal";
+import { useProfille } from "@/shared/hooks/userProfille/useProfille";
 
 const livesMock = [
   {
@@ -70,6 +81,7 @@ const livesMock = [
 ];
 
 export default function Lives() {
+  const { user, setUser, handleGetUserById } = useLogin();
   const {
     modalCreateLiveIsOpen,
     liveList,
@@ -77,19 +89,13 @@ export default function Lives() {
     handleOpenCreateLiveModal,
     handleGetLive,
   } = useLive();
+  const { updateFusoUser } = useProfille();
 
   const resumo = {
-    aoVivo: livesMock.filter((l) => l.status === "live").length,
-    agendadas: livesMock.filter((l) => l.status === "scheduled").length,
-    totalViews: livesMock.reduce((acc, l) => acc + l.views, 0),
+    aoVivo: liveList?.filter((l) => l.status === "live").length,
+    agendadas: liveList?.filter((l) => l.status === "scheduled").length,
+    totalViews: 0,
   };
-
-  const { user, loginisLoading, setUser, handleGetUserById } = useLogin();
-  const {
-    openVinculationProductModal,
-    setLiveEditObject,
-    setOpenVinculationProductModal,
-  } = useLive();
 
   useEffect(() => {
     if (!user?._id) {
@@ -107,26 +113,53 @@ export default function Lives() {
     await handleGetLive();
   };
 
-  // if (getAllUserIsLoading) {
-  //   return <Loader />;
-  // }
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
+      <section className="flex justify-between items-start">
         <div>
           <h2 className="text-2xl font-semibold">Gerenciar Lives</h2>
           <p className="text-muted-foreground text-sm">
             Crie, agende e gerencie suas transmissões ao vivo
           </p>
         </div>
-        <Button
-          className="bg-primary text-white hover:bg-primary/90"
-          onClick={() => handleOpenCreateLiveModal()}
-        >
-          <Plus className="w-4 h-4 mr-2" /> Nova Live
-        </Button>
-      </div>
+
+        <div className="flex gap-5">
+          <div>
+            <Select
+              value={user?.hourFuse ?? "brasilia"}
+              onValueChange={(fuso) =>
+                updateFusoUser({ fuso, userId: user?._id ?? "" })
+              }
+            >
+              <SelectTrigger className="w-[280px]">
+                <SelectValue placeholder="Selecione o fuso horário" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="brasilia">
+                  (GMT -3:00) hora de Brasília
+                </SelectItem>
+                <SelectItem value="noronha">
+                  (GMT -2:00) hora de Fernando de Noronha
+                </SelectItem>
+                <SelectItem value="amazonas">
+                  (GMT -4:00) hora do Amazonas
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+            <p className="text-xs text-gray-400">
+              Os produtos apareceram no fuso horário do criador
+            </p>
+          </div>
+
+          <Button
+            className="bg-primary text-white hover:bg-primary/90"
+            onClick={() => handleOpenCreateLiveModal()}
+          >
+            <Plus className="w-4 h-4 mr-2" /> Nova Live
+          </Button>
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="bg-red-100">

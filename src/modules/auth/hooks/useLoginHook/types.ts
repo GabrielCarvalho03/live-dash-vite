@@ -11,6 +11,7 @@ export type user = {
   userType: string;
   permitions: string[];
   firstLogin: boolean;
+  hourFuse: string;
 };
 
 export interface LoginType {

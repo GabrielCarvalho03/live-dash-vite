@@ -1,9 +1,10 @@
 import { create } from "zustand";
-import { VinculationProduct } from "./types";
+import { allVinculationProductsObj, VinculationProduct } from "./types";
 import { toast } from "sonner";
 import { LiveApi } from "@/lib/api/liveApi";
 import { GetTokenUser } from "@/shared/utils/getTokenUser";
 import { useLive } from "./useLive";
+import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
 
 export const useVinculationProductsLive = create<VinculationProduct>((set) => ({
   loadingVinculationProduct: false,
@@ -39,6 +40,11 @@ export const useVinculationProductsLive = create<VinculationProduct>((set) => ({
     }
   },
 
+  vinculationProductsObject: {} as allVinculationProductsObj,
+  setVinculationProductsObject: (
+    vinculationProductsObject: allVinculationProductsObj
+  ) => set({ vinculationProductsObject }),
+
   handleAddVinculationProduct: async (data) => {
     const { setLoadingVinculationProduct } =
       useVinculationProductsLive.getState();
@@ -70,5 +76,53 @@ export const useVinculationProductsLive = create<VinculationProduct>((set) => ({
     } finally {
       setLoadingVinculationProduct(false);
     }
+  },
+
+  openDeleteVinculationProductModal: false,
+  setOpenDeleteVinculationProductModal: (value) =>
+    set({ openDeleteVinculationProductModal: value }),
+
+  loadingDeleteVinculationProducts: false,
+  setLoadingDeleteVinculationProducts: (
+    loadingDeleteVinculationProducts: boolean
+  ) => set({ loadingDeleteVinculationProducts }),
+
+  handleDeleteVinculationProduct: async (data) => {
+    const { user } = useLogin.getState();
+    const {
+      allVinculationProducts,
+      setLoadingDeleteVinculationProducts,
+      setAllViculationProducts,
+      setOpenDeleteVinculationProductModal,
+    } = useVinculationProductsLive.getState();
+    try {
+      setLoadingDeleteVinculationProducts(true);
+
+      await LiveApi.post("/live/product/delete", {
+        userId: user?._id,
+        productId: data._id,
+      });
+
+      const newList = allVinculationProducts.filter(
+        (item) => item._id !== data._id
+      );
+
+      setAllViculationProducts(newList);
+
+      setOpenDeleteVinculationProductModal(false);
+
+      toast.success("Deletado com sucesso", {
+        description: `Produto ${data.name} foi deletado.`,
+      });
+      console.log("data", data);
+    } catch (error: any) {
+      toast.error("Erro ao deletar produto vinculado.", {
+        description: `${error.response.data.error}`,
+      });
+    } finally {
+      setLoadingDeleteVinculationProducts(false);
+    }
+
+    return;
   },
 }));

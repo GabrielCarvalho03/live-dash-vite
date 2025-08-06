@@ -20,6 +20,7 @@ import { CategorieLive } from "../categorieLive/categorieLive";
 import { ProductVinculationModal } from "../createLiveSteps/products/form";
 import { CreateLiveStepsModal } from "../createLiveSteps/createLiveSteps";
 import { useVinculationProductsLive } from "../../hooks/useVinculationProducts";
+import { DeleteConfirmModal } from "@/shared/components/deleteConfirmModal/deleteConfirmModal";
 
 const livesMock = [
   {
@@ -75,12 +76,18 @@ export default function ProductsContent() {
     totalViews: livesMock.reduce((acc, l) => acc + l.views, 0),
   };
 
-  const { user, loginisLoading, setUser, handleGetUserById } = useLogin();
+  const { user, setUser, handleGetUserById } = useLogin();
 
   const {
     loadingisGetAllVinculationProduct,
     allVinculationProducts,
+    vinculationProductsObject,
+    openDeleteVinculationProductModal,
+    loadingDeleteVinculationProducts,
+    setOpenDeleteVinculationProductModal,
+    setVinculationProductsObject,
     handleGetAllVinculationProduct,
+    handleDeleteVinculationProduct,
   } = useVinculationProductsLive();
 
   useEffect(() => {
@@ -98,10 +105,6 @@ export default function ProductsContent() {
 
     await handleGetAllVinculationProduct();
   };
-
-  // if (getAllUserIsLoading) {
-  //   return <Loader />;
-  // }
 
   return (
     <div className="space-y-6">
@@ -129,7 +132,7 @@ export default function ProductsContent() {
           <span className="text-left">Ações</span>
         </div>
 
-        {!allVinculationProducts.length ? (
+        {loadingisGetAllVinculationProduct ? (
           <div className="flex justify-center items-center mt-40">
             <Loader2 className="w-12 h-12  text-blue-500 animate-spin " />
           </div>
@@ -180,7 +183,14 @@ export default function ProductsContent() {
                     <Pencil className="w-4 h-4" />
                   </Button>
 
-                  <Button size="icon" variant="ghost">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => {
+                      setVinculationProductsObject(products);
+                      setOpenDeleteVinculationProductModal(true);
+                    }}
+                  >
                     <Trash className="w-4 h-4 text-red-600" />
                   </Button>
                 </div>
@@ -196,6 +206,16 @@ export default function ProductsContent() {
       <CreateLiveStepsModal
         isOpen={modalCreateLiveIsOpen}
         onClose={() => setModalCreateLiveIsOpen(false)}
+      />
+
+      <DeleteConfirmModal
+        title="Tem certeza que deseja apagar esse produto?"
+        loading={loadingDeleteVinculationProducts}
+        isOpen={openDeleteVinculationProductModal}
+        onClose={() => setOpenDeleteVinculationProductModal(false)}
+        onDelete={() =>
+          handleDeleteVinculationProduct(vinculationProductsObject)
+        }
       />
     </div>
   );
