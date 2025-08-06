@@ -28,9 +28,9 @@ import { useUser } from "../hooks/useUser";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
 import { CreateUserForm } from "../components/createUserForm";
 import { UpdateUserForm } from "../components/updateUserForm";
-import { DeleteUserDialog } from "../components/deleteUserDialog";
 import { user } from "@/modules/auth/hooks/useLoginHook/types";
 import { Loader } from "@/shared/components/loader/loader";
+import { DeleteConfirmModal } from "@/shared/components/deleteConfirmModal/deleteConfirmModal";
 
 export default function Users() {
   const {
@@ -40,6 +40,7 @@ export default function Users() {
     updateUserModalOpen,
     userIdToDelete,
     ModalDeleteUserIsOpen,
+    deleteUserisLoading,
     handleOpenCreateUserModal,
     setCreateUserModalOpen,
     handleGetAllUsers,
@@ -284,7 +285,9 @@ export default function Users() {
           setUpdateUserModalOpen(false), setUpdateUserObject({} as user);
         }}
       />
-      <DeleteUserDialog
+      <DeleteConfirmModal
+        loading={deleteUserisLoading}
+        title="Tem certeza que deseja apagar esse usuário ?"
         isOpen={ModalDeleteUserIsOpen}
         onClose={() => setModalDeleteUserIsOpen(false)}
         onDelete={() => handleDeleteUser(userIdToDelete._id)}

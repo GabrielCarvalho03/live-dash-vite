@@ -21,6 +21,7 @@ import { CategorieLive } from "../categorieLive/categorieLive";
 import { ProductVinculationModal } from "../createLiveSteps/products/form";
 import { CreateLiveStepsModal } from "../createLiveSteps/createLiveSteps";
 import { useVinculationProductsLive } from "../../hooks/useVinculationProducts";
+import { DeleteConfirmModal } from "@/shared/components/deleteConfirmModal/deleteConfirmModal";
 
 const livesMock = [
   {
@@ -78,15 +79,22 @@ export default function LiveContent() {
   const { user, loginisLoading, setUser, handleGetUserById } = useLogin();
   const {
     openVinculationProductModal,
+    openDeleteLiveModal,
+    liveEditObject,
+    loadingDeleteLive,
+    loadingLiveList,
+    setLoadingLiveList,
+    setOpenDeleteLiveModal,
     setLiveEditObject,
     setOpenVinculationProductModal,
+    handleDeleteLive,
   } = useLive();
 
   useEffect(() => {
     if (!user?._id) {
       GetDataForPage();
     }
-    if (!liveList) {
+    if (!liveList.length) {
       handleGetLive();
       handleGetAllVinculationProduct();
     }
@@ -129,7 +137,7 @@ export default function LiveContent() {
           <span className="text-left">Ações</span>
         </div>
 
-        {!liveList.length ? (
+        {loadingLiveList ? (
           <div className="flex justify-center items-center mt-40">
             <Loader2 className="w-12 h-12  text-blue-500 animate-spin " />
           </div>
@@ -226,7 +234,14 @@ export default function LiveContent() {
                       <Play className="w-4 h-4 text-blue-600" />
                     </Button>
                   ) : (
-                    <Button size="icon" variant="ghost">
+                    <Button
+                      onClick={() => {
+                        setLiveEditObject(live);
+                        setOpenDeleteLiveModal(true);
+                      }}
+                      size="icon"
+                      variant="ghost"
+                    >
                       <Trash className="w-4 h-4 text-red-600" />
                     </Button>
                   )}
@@ -243,6 +258,15 @@ export default function LiveContent() {
       <CreateLiveStepsModal
         isOpen={modalCreateLiveIsOpen}
         onClose={() => setModalCreateLiveIsOpen(false)}
+      />
+
+      <DeleteConfirmModal
+        title="Tem certeza que deseja apagar essa Live?"
+        description="Os produtos criados nessa live também serão excluidos."
+        isOpen={openDeleteLiveModal}
+        loading={loadingDeleteLive}
+        onClose={() => setOpenDeleteLiveModal(false)}
+        onDelete={() => handleDeleteLive(liveEditObject)}
       />
     </div>
   );

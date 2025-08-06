@@ -3,12 +3,13 @@ import { liveObject, LiveRegisterType } from "./types";
 import { toast } from "sonner";
 import { api } from "@/lib/axios";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
-import { date, promise } from "zod";
+import { boolean, date, promise } from "zod";
 import { LiveApi } from "@/lib/api/liveApi";
 import { GetTokenUser } from "@/shared/utils/getTokenUser";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { defaultHour } from "../utils/defualtHour";
+import { useVinculationProductsLive } from "./useVinculationProducts";
 export const useLive = create<LiveRegisterType>((set) => ({
   modalCreateLiveIsOpen: false,
   setModalCreateLiveIsOpen: (value) => set({ modalCreateLiveIsOpen: value }),
@@ -35,10 +36,78 @@ export const useLive = create<LiveRegisterType>((set) => ({
   setOpenVinculationProductModal: (value) =>
     set({ openVinculationProductModal: value }),
 
-  handleGetLive: async () => {
-    const { setLiveList } = useLive.getState();
+  openDeleteLiveModal: false,
+  setOpenDeleteLiveModal: (openDeleteLiveModal: boolean) =>
+    set({ openDeleteLiveModal }),
+
+  loadingDeleteLive: false,
+  setLoadingDeleteLive: (loadingDeleteLive: boolean) =>
+    set({ loadingDeleteLive }),
+
+  handleDeleteLive: async (data) => {
+    const { user } = useLogin.getState();
+    const {
+      liveList,
+      setLiveList,
+      setOpenDeleteLiveModal,
+      setLoadingDeleteLive,
+    } = useLive.getState();
+    const { allVinculationProducts, setAllViculationProducts } =
+      useVinculationProductsLive.getState();
 
     try {
+      setLoadingDeleteLive(true);
+
+      await LiveApi.delete(`live/${data._id}`, {
+        data: {
+          role: user?.userType,
+        },
+      });
+
+      const existeProductID = allVinculationProducts.filter(
+        (item) => item.liveId === data._id
+      );
+
+      if (existeProductID) {
+        const { allVinculationProducts, setAllViculationProducts } =
+          useVinculationProductsLive.getState();
+        for (let item of existeProductID) {
+          await LiveApi.post("/live/product/delete", {
+            userId: user?._id,
+            productId: item._id,
+          });
+        }
+        const idsToRemove = new Set(existeProductID.map((item) => item._id));
+        const newListVinculationProducts = allVinculationProducts.filter(
+          (product) => !idsToRemove.has(product._id)
+        );
+
+        setAllViculationProducts(newListVinculationProducts);
+      }
+      const newList = liveList.filter((item) => item._id !== data._id);
+
+      setLiveList(newList);
+      setOpenDeleteLiveModal(false);
+
+      toast.success("Deletado com sucesso", {
+        description: `Live ${data.title} foi deletada com sucesso.`,
+      });
+    } catch (error: any) {
+      toast.error("Erro ao deletar live", {
+        description: `${error.response.data.error}`,
+      });
+    } finally {
+      setLoadingDeleteLive(false);
+    }
+  },
+
+  loadingLiveList: false,
+  setLoadingLiveList: (loadingLiveList: boolean) => set({ loadingLiveList }),
+  handleGetLive: async () => {
+    const { setLiveList, setLoadingLiveList } = useLive.getState();
+
+    try {
+      setLoadingLiveList(true);
       const lives = await LiveApi.get("/lives");
 
       console.log("lives", lives.data);
@@ -50,6 +119,8 @@ export const useLive = create<LiveRegisterType>((set) => ({
       toast.error("Erro ao buscar live", {
         description: `${error.response.data.error}`,
       });
+    } finally {
+      setLoadingLiveList(false);
     }
 
     return;
@@ -81,7 +152,6 @@ export const useLive = create<LiveRegisterType>((set) => ({
             description: `${actualSaveSchedule + 1} de ${listDaysLive.length}`,
           });
 
-          await new Promise((resolve) => setTimeout(resolve, 2000));
           try {
             const response = await LiveApi.post(
               "/live/create",
@@ -100,6 +170,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
                     day: item.day,
                     hour: item.hour,
                   },
+                  userName: user?.name ?? "",
                   url_play:
                     "http://meuservidor.tv:8080/live/interativa/index.m3u8",
                   status: data.status,
@@ -114,6 +185,12 @@ export const useLive = create<LiveRegisterType>((set) => ({
                 },
               }
             );
+
+            await LiveApi.post("/live/livepeer-create", {
+              name: response?.data?.live.title,
+              userId: user?._id,
+              liveId: response.data.live._id,
+            });
 
             setLiveList([...liveList, response.data.live]);
           } catch (error: any) {
@@ -159,6 +236,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
           },
           url_play: "http://meuservidor.tv:8080/live/interativa/index.m3u8",
           status: data.status,
+          userName: user?.name ?? "",
           userId: user?._id,
           likes: 0,
           liked_by: [],
@@ -166,6 +244,12 @@ export const useLive = create<LiveRegisterType>((set) => ({
         headers: {
           Authorization: token,
         },
+      });
+
+      await LiveApi.post("/live/livepeer-create", {
+        name: response?.data?.live.title,
+        userId: user?._id,
+        liveId: response.data.live._id,
       });
 
       toast.dismiss("loadingLive");
