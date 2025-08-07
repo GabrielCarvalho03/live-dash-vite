@@ -5,6 +5,7 @@ import { LiveApi } from "@/lib/api/liveApi";
 import { GetTokenUser } from "@/shared/utils/getTokenUser";
 import { useLive } from "./useLive";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
+import { arrayMove } from "@dnd-kit/sortable";
 
 export const useVinculationProductsLive = create<VinculationProduct>((set) => ({
   loadingVinculationProduct: false,
@@ -124,5 +125,69 @@ export const useVinculationProductsLive = create<VinculationProduct>((set) => ({
     }
 
     return;
+  },
+
+  listProductsEdited: [],
+  setListProductsEdited: (listProductsEdited) => set({ listProductsEdited }),
+
+  handleChange: (
+    index: number,
+    field: keyof allVinculationProductsObj,
+    value: string
+  ) => {
+    const { listProductsEdited, setListProductsEdited } =
+      useVinculationProductsLive.getState();
+    const updated = [...listProductsEdited];
+    updated[index] = {
+      ...updated[index],
+      [field]: value,
+    };
+    setListProductsEdited(updated);
+  },
+
+  addProduct: () => {
+    const { listProductsEdited, setListProductsEdited } =
+      useVinculationProductsLive.getState();
+    setListProductsEdited([
+      ...listProductsEdited,
+      {
+        name: "",
+        link: "",
+        hourStart: "",
+        hourEnd: "",
+        _id: "",
+        liveId: "",
+        userId: "",
+      },
+    ]);
+  },
+  removeProduct: (index: number) => {
+    const { listProductsEdited, setListProductsEdited } =
+      useVinculationProductsLive.getState();
+    const updated = [...listProductsEdited];
+    updated.splice(index, 1);
+    setListProductsEdited(updated);
+  },
+
+  handleDragEnd: (event: any) => {
+    const { active, over } = event;
+    const { listProductsEdited, setListProductsEdited } =
+      useVinculationProductsLive.getState();
+    if (!over) return;
+
+    if (active.id !== over.id) {
+      const oldIndex = listProductsEdited.findIndex(
+        (item) => item._id === active.id
+      );
+      const newIndex = listProductsEdited.findIndex(
+        (item) => item._id === over.id
+      );
+
+      const reordered = arrayMove(listProductsEdited, oldIndex, newIndex);
+
+      console.log("muve array", reordered);
+
+      setListProductsEdited(reordered);
+    }
   },
 }));

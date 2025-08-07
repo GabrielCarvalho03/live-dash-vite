@@ -1,4 +1,5 @@
 import { LiveCreateSchemaData } from "./liveCreateSchema";
+import { LiveEditSchemaData } from "./liveEditSchema";
 import { VinculationProductsLiveSchemaData } from "./vinculationProductsLiveSchema";
 
 export type liveObject = {
@@ -19,7 +20,7 @@ export type liveObject = {
   likes: number;
   liked_by: any[];
   streamKey: string;
-  rtmpUrl: string;
+  url_RTMP: string;
   views: string;
 };
 
@@ -56,12 +57,19 @@ export interface LiveRegisterType {
   setLoadingDeleteLive: (value: boolean) => void;
   handleDeleteLive: (value: liveObject) => Promise<void>;
 
+  liveEdit: boolean;
+  setLiveEdit: (value: boolean) => void;
+
   liveList: liveObject[];
   setLiveList: (value: liveObject[]) => void;
   loadingLiveList: boolean;
   setLoadingLiveList: (value: boolean) => void;
   handleGetLive: () => Promise<liveObject[] | undefined>;
   handleCreateLive: (data: LiveCreateSchemaData) => Promise<void>;
+
+  loadingUpdateLive: boolean;
+  setLoadingUpdateLive: (value: boolean) => void;
+  handleUpdateLive: (data: LiveCreateSchemaData) => Promise<void>;
 }
 
 export interface VinculationProduct {
@@ -85,9 +93,22 @@ export interface VinculationProduct {
   openDeleteVinculationProductModal: boolean;
   setOpenDeleteVinculationProductModal: (value: boolean) => void;
 
+  listProductsEdited: allVinculationProductsObj[];
+  setListProductsEdited: (value: allVinculationProductsObj[]) => void;
+
   loadingDeleteVinculationProducts: boolean;
   setLoadingDeleteVinculationProducts: (value: boolean) => void;
   handleDeleteVinculationProduct: (
     data: allVinculationProductsObj
   ) => Promise<void>;
+
+  handleChange: (
+    index: number,
+    field: keyof allVinculationProductsObj,
+    value: string
+  ) => void;
+
+  addProduct: () => void;
+  removeProduct: (index: number) => void;
+  handleDragEnd: (event: any) => void;
 }

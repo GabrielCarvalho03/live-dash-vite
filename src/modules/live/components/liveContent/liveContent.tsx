@@ -22,6 +22,8 @@ import { ProductVinculationModal } from "../createLiveSteps/products/form";
 import { CreateLiveStepsModal } from "../createLiveSteps/createLiveSteps";
 import { useVinculationProductsLive } from "../../hooks/useVinculationProducts";
 import { DeleteConfirmModal } from "@/shared/components/deleteConfirmModal/deleteConfirmModal";
+import { liveObject } from "../../hooks/types";
+import { toast } from "sonner";
 
 const livesMock = [
   {
@@ -63,6 +65,8 @@ export default function LiveContent() {
   const {
     modalCreateLiveIsOpen,
     liveList,
+    liveEdit,
+    setLiveEdit,
     setModalCreateLiveIsOpen,
     handleOpenCreateLiveModal,
     handleGetLive,
@@ -106,6 +110,20 @@ export default function LiveContent() {
 
     await handleGetLive();
     await handleGetAllVinculationProduct();
+  };
+
+  const verifyLiveForEdit = (data: liveObject) => {
+    if (data.status === "live") {
+      toast.error("Não é possivel editar", {
+        description: "Não é posssivel editar live que está no ar.",
+      });
+
+      return;
+    }
+
+    setModalCreateLiveIsOpen(true);
+    setLiveEditObject(data);
+    setLiveEdit(true);
   };
 
   // if (getAllUserIsLoading) {
@@ -165,14 +183,13 @@ export default function LiveContent() {
                     {live.description}
                   </span>
 
-                  {(live.status === "AO VIVO" ||
-                    live.status === "Agendada") && (
+                  {(live.status === "live" || live.status === "scheduled") && (
                     <div className="mt-2 text-xs bg-yellow-100 text-yellow-900 p-2 border border-yellow-400 rounded-md w-fit max-w-full leading-tight">
                       <p>
                         <strong>🔑 OBS:</strong> {live.streamKey ?? ""}
                       </p>
                       <p>
-                        <strong>📡 RTMP:</strong> {live.rtmpUrl}
+                        <strong>📡 RTMP:</strong> {live.url_RTMP}
                       </p>
                       <p className="text-[10px] text-yellow-800 italic mt-1">
                         *Copie no OBS para transmitir*
@@ -211,7 +228,11 @@ export default function LiveContent() {
                 </div>
 
                 <div className="flex gap-2 items-center">
-                  <Button size="icon" variant="ghost">
+                  <Button
+                    onClick={() => verifyLiveForEdit(live)}
+                    size="icon"
+                    variant="ghost"
+                  >
                     <Pencil className="w-4 h-4" />
                   </Button>
                   <Button
@@ -257,7 +278,11 @@ export default function LiveContent() {
       />
       <CreateLiveStepsModal
         isOpen={modalCreateLiveIsOpen}
-        onClose={() => setModalCreateLiveIsOpen(false)}
+        onClose={() => {
+          setModalCreateLiveIsOpen(false);
+          liveEdit ? setLiveEdit(false) : null;
+          setLiveEditObject({} as liveObject);
+        }}
       />
 
       <DeleteConfirmModal
@@ -265,7 +290,10 @@ export default function LiveContent() {
         description="Os produtos criados nessa live também serão excluidos."
         isOpen={openDeleteLiveModal}
         loading={loadingDeleteLive}
-        onClose={() => setOpenDeleteLiveModal(false)}
+        onClose={() => {
+          setOpenDeleteLiveModal(false);
+          setLiveEditObject({} as liveObject);
+        }}
         onDelete={() => handleDeleteLive(liveEditObject)}
       />
     </div>

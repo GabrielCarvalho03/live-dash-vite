@@ -29,6 +29,7 @@ import {
 } from "../../../users/hooks/usersCreateSchema";
 import { FormLiveStepCreateModal } from "./live/form";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
+import { useLive } from "../../hooks/useLive";
 
 type CreateUserFormProps = {
   isOpen: boolean;
@@ -39,17 +40,9 @@ export const CreateLiveStepsModal = ({
   isOpen,
   onClose,
 }: CreateUserFormProps) => {
-  const { saveUserisLoading, handleSaveUser, setCreateUserModalOpen } =
-    useUser();
-  const { user } = useLogin();
+  const { liveEdit } = useLive();
 
-  const {
-    handleSubmit,
-    register,
-    setValue,
-    control,
-    formState: { errors },
-  } = useForm<UseCreateDataSchema>({
+  const { setValue } = useForm<UseCreateDataSchema>({
     mode: "all",
     resolver: zodResolver(UsersCreateSchema),
     defaultValues: {
@@ -78,7 +71,7 @@ export const CreateLiveStepsModal = ({
       >
         <CardHeader>
           <CardTitle className="text-2xl font-semibold text-center">
-            Cadastrar nova live
+            {liveEdit ? "Editar live" : " Cadastrar nova live"}
           </CardTitle>
           <CardDescription className="text-center">
             Preencha os campos abaixo para cadastrar uma nova live.

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ErrorMessage } from "@/shared/components/erroMessage/errorMessage";
 import { Button } from "@/shared/components/ui/button";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
@@ -8,10 +9,10 @@ import { Label } from "@radix-ui/react-label";
 import {
   LiveCreateSchema,
   LiveCreateSchemaData,
+  LiveStatusProps,
 } from "@/modules/live/hooks/liveCreateSchema";
 import { Calender } from "../../calendar/calendar";
 import { Badge } from "@/shared/components/ui/badge";
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { CategoryListCreateLive } from "@/modules/live/utils/categoryList";
 import { Switch } from "@/shared/components/ui/switch";
@@ -24,14 +25,18 @@ import {
 import { Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Avatar } from "@/shared/components/ui/avatar";
 import { ImageUploadField } from "./previewImage";
 import { useLive } from "@/modules/live/hooks/useLive";
 import { defaultHour } from "@/modules/live/utils/defualtHour";
+import { EditProductLive } from "../../EditProductInLiveModal/editProduct";
+import { useVinculationProductsLive } from "@/modules/live/hooks/useVinculationProducts";
 
-type CreateUserFormProps = {};
+export const FormLiveStepCreateModal = () => {
+  const { liveEdit, liveEditObject } = useLive();
+  const defaultSchedules = [
+    { date: new Date().toISOString(), day: "", hour: defaultHour() },
+  ];
 
-export const FormLiveStepCreateModal = ({}: CreateUserFormProps) => {
   const {
     handleSubmit,
     register,
@@ -43,33 +48,44 @@ export const FormLiveStepCreateModal = ({}: CreateUserFormProps) => {
     mode: "all",
     resolver: zodResolver(LiveCreateSchema),
     defaultValues: {
-      image: "",
-      category: "Marketing",
-      allSchedules: [
-        { date: new Date().toISOString(), day: "", hour: defaultHour() },
-      ],
-      status: "scheduled",
-      liked_by: [],
-      likes: 0,
+      title: liveEdit ? liveEditObject.title : "",
+      description: liveEdit ? liveEditObject.description : "",
+      image: liveEdit ? liveEditObject.image : "",
+      category: liveEdit ? liveEditObject.category : "Marketing",
+      allSchedules: liveEdit
+        ? [
+            {
+              date: new Date(liveEditObject.dayLive?.date).toISOString(),
+              day: liveEditObject.dayLive?.day,
+              hour: liveEditObject.dayLive?.hour,
+            },
+          ]
+        : defaultSchedules,
+
+      status: liveEdit
+        ? (liveEditObject.status as LiveStatusProps)
+        : "scheduled",
+
+      liked_by: liveEdit ? liveEditObject.liked_by : [],
+      likes: liveEdit ? liveEditObject.likes : 0,
     },
   });
-  const { handleCreateLive } = useLive();
 
   const selected = watch("category");
   const status = watch("status");
 
-  console.log("errors ", errors);
-  const { saveUserisLoading, handleSaveUser, setCreateUserModalOpen } =
-    useUser();
-
+  const { saveUserisLoading } = useUser();
+  const { handleCreateLive, handleUpdateLive } = useLive();
+  const { allVinculationProducts } = useVinculationProductsLive();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "allSchedules",
   });
-
   const schedules = watch("allSchedules");
 
-  console.log("Schedules atuais:", schedules);
+  const allProductsVinculate = allVinculationProducts?.filter(
+    (item) => item.liveId == liveEditObject._id
+  );
 
   useEffect(() => {
     fields.forEach((field, index) => {
@@ -82,7 +98,11 @@ export const FormLiveStepCreateModal = ({}: CreateUserFormProps) => {
   }, [fields, watch, setValue]);
 
   return (
-    <form onSubmit={handleSubmit((data) => handleCreateLive(data))}>
+    <form
+      onSubmit={handleSubmit((data: LiveCreateSchemaData) =>
+        liveEdit ? handleUpdateLive(data) : handleCreateLive(data)
+      )}
+    >
       <section className="w-full flex flex-col gap-3">
         <div className="w-full flex flex-col items-center mt-10">
           <Controller
@@ -142,7 +162,7 @@ export const FormLiveStepCreateModal = ({}: CreateUserFormProps) => {
           />
         </div>
 
-        <div className="grid gap-2 mt-5">
+        <div className="grid gap-2 my-5">
           <section className="w-full flex justify-center items-center gap-10">
             <span
               className={cn(
@@ -155,6 +175,7 @@ export const FormLiveStepCreateModal = ({}: CreateUserFormProps) => {
             </span>
             <Switch
               value={status}
+              defaultChecked={liveEdit && liveEditObject.status === "live"}
               onCheckedChange={(value) =>
                 setValue("status", value ? "live" : "scheduled")
               }
@@ -174,8 +195,6 @@ export const FormLiveStepCreateModal = ({}: CreateUserFormProps) => {
               Iniciar agora
             </div>
           </section>
-
-          <section className="w-full flex justify-between gap-3"></section>
         </div>
 
         {status === "scheduled" && (
@@ -265,18 +284,24 @@ export const FormLiveStepCreateModal = ({}: CreateUserFormProps) => {
                       </section>
                     ))}
 
-                    <button
-                      type="button"
-                      onClick={() => append({ date: "", day: "", hour: "" })}
-                      className="self-start text-blue-600 hover:underline text-sm"
-                    >
-                      + Adicionar outra data
-                    </button>
+                    {!liveEdit && (
+                      <button
+                        type="button"
+                        onClick={() => append({ date: "", day: "", hour: "" })}
+                        className="self-start text-blue-600 hover:underline text-sm"
+                      >
+                        + Adicionar outra data
+                      </button>
+                    )}
                   </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
           </div>
+        )}
+
+        {liveEdit && allProductsVinculate?.length > 0 && (
+          <EditProductLive listLive={allProductsVinculate} />
         )}
       </section>
 
@@ -285,7 +310,13 @@ export const FormLiveStepCreateModal = ({}: CreateUserFormProps) => {
         type="submit"
         className="w-full bg-blue-600 hover:bg-blue-700 text-white "
       >
-        {saveUserisLoading ? <Loader2 className="animate-spin" /> : "Criar"}
+        {saveUserisLoading ? (
+          <Loader2 className="animate-spin" />
+        ) : liveEdit ? (
+          "Atualizar Live"
+        ) : (
+          "Criar"
+        )}
       </Button>
     </form>
   );
