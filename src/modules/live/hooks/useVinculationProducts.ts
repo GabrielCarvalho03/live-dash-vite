@@ -16,11 +16,18 @@ export const useVinculationProductsLive = create<VinculationProduct>((set) => ({
   setLoadingisGetAllVinculationProduct: (value) =>
     set({ loadingisGetAllVinculationProduct: value }),
 
+  allVinculationProductsFiltered: [],
+  setAllViculationProductsFiltered: (allVinculationProductsFiltered) =>
+    set({ allVinculationProductsFiltered }),
+
   allVinculationProducts: [],
   setAllViculationProducts: (value) => set({ allVinculationProducts: value }),
   handleGetAllVinculationProduct: async () => {
-    const { setLoadingisGetAllVinculationProduct, setAllViculationProducts } =
-      useVinculationProductsLive.getState();
+    const {
+      setLoadingisGetAllVinculationProduct,
+      setAllViculationProducts,
+      setAllViculationProductsFiltered,
+    } = useVinculationProductsLive.getState();
 
     const token = GetTokenUser();
     try {
@@ -32,6 +39,7 @@ export const useVinculationProductsLive = create<VinculationProduct>((set) => ({
       });
       console.log("alllives", reponse.data.data);
       setAllViculationProducts(reponse.data.data);
+      setAllViculationProductsFiltered(reponse.data.data);
     } catch (error: any) {
       toast.error("Error ao buscar produtos vinculado", {
         description: `${error.response.data.error}`,
@@ -88,13 +96,15 @@ export const useVinculationProductsLive = create<VinculationProduct>((set) => ({
     loadingDeleteVinculationProducts: boolean
   ) => set({ loadingDeleteVinculationProducts }),
 
-  handleDeleteVinculationProduct: async (data) => {
+  handleDeleteVinculationProduct: async (data, index) => {
     const { user } = useLogin.getState();
     const {
       allVinculationProducts,
       setLoadingDeleteVinculationProducts,
       setAllViculationProducts,
+      setAllViculationProductsFiltered,
       setOpenDeleteVinculationProductModal,
+      removeProduct,
     } = useVinculationProductsLive.getState();
     try {
       setLoadingDeleteVinculationProducts(true);
@@ -109,9 +119,11 @@ export const useVinculationProductsLive = create<VinculationProduct>((set) => ({
       );
 
       setAllViculationProducts(newList);
-
+      setAllViculationProductsFiltered(newList);
       setOpenDeleteVinculationProductModal(false);
-
+      if (index) {
+        removeProduct(index);
+      }
       toast.success("Deletado com sucesso", {
         description: `Produto ${data.name} foi deletado.`,
       });

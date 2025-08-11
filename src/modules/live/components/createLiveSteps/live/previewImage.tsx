@@ -35,7 +35,7 @@ export function ImageUploadField({ value, onChange, name }: Props) {
         type="file"
         accept="image/*"
         name={name}
-        className="hidden"
+        className="hidden "
         onChange={handleFileChange}
       />
 

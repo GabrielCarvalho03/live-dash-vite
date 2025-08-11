@@ -28,6 +28,9 @@ export const useLive = create<LiveRegisterType>((set) => ({
   liveList: [],
   setLiveList: (value) => set({ liveList: value }),
 
+  liveListFilter: [],
+  setLiveListFilter: (liveListFilter) => set({ liveListFilter }),
+
   liveEdit: false,
   setLiveEdit: (liveEdit) => set({ liveEdit }),
 
@@ -51,6 +54,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
     const {
       liveList,
       setLiveList,
+      setLiveListFilter,
       setOpenDeleteLiveModal,
       setLoadingDeleteLive,
     } = useLive.getState();
@@ -89,6 +93,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
       const newList = liveList.filter((item) => item._id !== data._id);
 
       setLiveList(newList);
+      setLiveListFilter(newList);
       setOpenDeleteLiveModal(false);
 
       toast.success("Deletado com sucesso", {
@@ -106,15 +111,15 @@ export const useLive = create<LiveRegisterType>((set) => ({
   loadingLiveList: false,
   setLoadingLiveList: (loadingLiveList: boolean) => set({ loadingLiveList }),
   handleGetLive: async () => {
-    const { setLiveList, setLoadingLiveList } = useLive.getState();
+    const { setLiveList, setLoadingLiveList, setLiveListFilter } =
+      useLive.getState();
 
     try {
       setLoadingLiveList(true);
       const lives = await LiveApi.get("/lives");
 
-      console.log("lives", lives.data);
-
       setLiveList(lives.data.data);
+      setLiveListFilter(lives.data?.data);
 
       return lives.data.data;
     } catch (error: any) {
@@ -127,12 +132,33 @@ export const useLive = create<LiveRegisterType>((set) => ({
 
     return;
   },
+  handleGetLiveByUser: async (id) => {
+    const { setLiveList, setLoadingLiveList, setLiveListFilter } =
+      useLive.getState();
+    try {
+      setLoadingLiveList(true);
+      const lives = await LiveApi.get(`/lives/user/${id}`);
+      setLiveList(lives.data.data);
+      setLiveListFilter(lives.data.data);
+
+      return lives.data.data;
+    } catch (error: any) {
+      toast.error("Erro ao buscar live", {
+        description: `${error.response.data.error}`,
+      });
+    } finally {
+      setLoadingLiveList(false);
+    }
+
+    return undefined;
+  },
   handleCreateLive: async (data) => {
     try {
       const { user } = useLogin.getState();
       const {
         liveList,
         setLiveList,
+        setLiveListFilter,
         setActualSaveSchedule,
         setTotalLiveSchedule,
       } = useLive.getState();
@@ -158,9 +184,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
             const response = await LiveApi.post(
               "/live/create",
               {
-                user: {
-                  userType: user?.userType,
-                },
+                user: user,
                 data: {
                   image: data.image,
                   title: data.title,
@@ -173,6 +197,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
                     hour: item.hour,
                   },
                   userName: user?.name ?? "",
+                  userAvatar: user?.avatar,
                   url_play:
                     "http://meuservidor.tv:8080/live/interativa/index.m3u8",
                   status: data.status,
@@ -195,6 +220,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
             });
 
             setLiveList([...liveList, response.data.live]);
+            setLiveListFilter([...liveList, response.data.live]);
           } catch (error: any) {
             console.log("erro", error);
             toast.dismiss("loadingLive");
@@ -222,9 +248,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
         description: `${1} de ${1}`,
       });
       const response = await LiveApi.post("/live/create", {
-        user: {
-          userType: user?.userType,
-        },
+        user: user,
         data: {
           image: data.image,
           title: data.title,
@@ -239,6 +263,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
           url_play: "http://meuservidor.tv:8080/live/interativa/index.m3u8",
           status: data.status,
           userName: user?.name ?? "",
+          userAvatar: user?.avatar,
           userId: user?._id,
           likes: 0,
           liked_by: [],
@@ -261,6 +286,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
       setTotalLiveSchedule(0);
 
       setLiveList([...liveList, response.data.live]);
+      setLiveListFilter([...liveList, response.data.live]);
     } catch (error: any) {
       toast.dismiss("loadingLive");
       toast.error("Erro ao criar live", {
@@ -277,6 +303,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
       liveEditObject,
       liveList,
       setLiveList,
+      setLiveListFilter,
       setModalCreateLiveIsOpen,
       setLoadingUpdateLive,
     } = useLive.getState();
@@ -291,8 +318,12 @@ export const useLive = create<LiveRegisterType>((set) => ({
         // setTotalLiveSchedule(data.allSchedules.length);
 
         for (const item of listDaysLive) {
-          const { actualSaveSchedule, liveList, setLiveList } =
-            useLive.getState();
+          const {
+            actualSaveSchedule,
+            liveList,
+            setLiveList,
+            setLiveListFilter,
+          } = useLive.getState();
           // setActualSaveSchedule(actualSaveSchedule + 1);
 
           toast.loading("Editando live", {
@@ -342,6 +373,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
                 : live
             );
             setLiveList(updatedLiveList);
+            setLiveListFilter(updatedLiveList);
           } catch (error: any) {
             console.log("erro", error);
             toast.dismiss("loadingLive");
@@ -402,6 +434,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
           description: `Live ${data.title} foi atualizada com sucesso.`,
         });
         setLiveList(updatedLiveList);
+        setLiveListFilter(updatedLiveList);
       }
 
       toast.loading("Atualizando Produtos", {
@@ -411,13 +444,32 @@ export const useLive = create<LiveRegisterType>((set) => ({
       for (let item of listProductsEdited) {
         const { allVinculationProducts, setAllViculationProducts } =
           useVinculationProductsLive.getState();
+
         try {
-          await LiveApi.put(`/live/product/${item._id}`, {
-            name: item.name,
-            link: item.link,
-            hourStart: item.hourStart,
-            hourEnd: item.hourEnd,
-          });
+          if (item._id === "") {
+            const res = await LiveApi.post(`/live/product/vinculation`, {
+              products: [
+                {
+                  name: item.name,
+                  link: item.link,
+                  hourStart: item.hourStart,
+                  hourEnd: item.hourEnd,
+                },
+              ],
+              userId: user?._id,
+              liveId: liveEditObject._id,
+            });
+
+            window.location.reload();
+          } else {
+            await LiveApi.put(`/live/product/${item._id}`, {
+              name: item.name,
+              link: item.link,
+              hourStart: item.hourStart,
+              hourEnd: item.hourEnd,
+            });
+          }
+
           const newProductsEdited = allVinculationProducts?.map((product) =>
             product._id === item._id
               ? {
@@ -430,34 +482,6 @@ export const useLive = create<LiveRegisterType>((set) => ({
               : product
           );
           setAllViculationProducts(newProductsEdited);
-          const productRemoved = allVinculationProducts.filter(
-            (product) =>
-              !listProductsEdited.some((edited) => edited._id === product._id)
-          );
-
-          console.log("produtos para remover", productRemoved);
-
-          if (productRemoved) {
-            for (let removed of productRemoved) {
-              await LiveApi.post(
-                `live/product/delete`,
-                {
-                  userId: user?._id,
-                  productId: removed._id,
-                },
-                {
-                  headers: {
-                    Authorization: token,
-                  },
-                }
-              );
-            }
-            const newListProducts = allVinculationProducts.filter(
-              (all) =>
-                !productRemoved.some((removed) => removed._id === all._id)
-            );
-            setAllViculationProducts(newListProducts);
-          }
         } catch (error: any) {
           toast.error("Erro ao atualizar produtos", {
             description: `${error.response?.data?.error}`,

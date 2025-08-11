@@ -5,8 +5,6 @@ type StatusLiveProps = {
 };
 
 export const StatusLive = ({ status }: StatusLiveProps) => {
-  console.log("tipo de status", status);
-
   return (
     <Badge
       className={
@@ -14,6 +12,8 @@ export const StatusLive = ({ status }: StatusLiveProps) => {
           ? "bg-red-500 text-white"
           : status === "scheduled"
           ? "bg-blue-500 text-white"
+          : status === "finished"
+          ? "bg-blue-950 text-white"
           : "bg-green-500 text-white"
       }
     >
@@ -21,6 +21,8 @@ export const StatusLive = ({ status }: StatusLiveProps) => {
         ? "AO VIVO"
         : status === "scheduled"
         ? "Agendada"
+        : status === "finished"
+        ? "Finalizada"
         : status}
     </Badge>
   );

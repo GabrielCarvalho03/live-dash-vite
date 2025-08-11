@@ -18,13 +18,13 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { SortableItem } from "./SortableItem";
 import { useVinculationProductsLive } from "@/modules/live/hooks/useVinculationProducts";
+import { DeleteConfirmModal } from "@/shared/components/deleteConfirmModal/deleteConfirmModal";
 
 type EditProductLiveProps = {
   listLive: allVinculationProductsObj[];
@@ -39,11 +39,16 @@ export const EditProductLive = ({ listLive }: EditProductLiveProps) => {
   );
   const {
     listProductsEdited,
+    openDeleteVinculationProductModal,
+    loadingDeleteVinculationProducts,
+    vinculationProductsObject,
     setListProductsEdited,
     handleChange,
     addProduct,
-    removeProduct,
     handleDragEnd,
+    handleDeleteVinculationProduct,
+    setOpenDeleteVinculationProductModal,
+    setVinculationProductsObject,
   } = useVinculationProductsLive();
 
   useEffect(() => {
@@ -53,7 +58,7 @@ export const EditProductLive = ({ listLive }: EditProductLiveProps) => {
   }, []);
 
   const [activeAccordion, setActiveAccordion] = useState("");
-
+  const [removeIndex, setRemoveIndex] = useState<number>(0);
   const items = listProductsEdited?.map(
     (product) => product._id || `temp-${Math.random()}`
   );
@@ -135,7 +140,11 @@ export const EditProductLive = ({ listLive }: EditProductLiveProps) => {
                             <Button
                               type="button"
                               variant="destructive"
-                              onClick={() => removeProduct(index)}
+                              onClick={() => {
+                                setVinculationProductsObject(product);
+                                setOpenDeleteVinculationProductModal(true);
+                                setRemoveIndex(index);
+                              }}
                             >
                               Remover produto
                             </Button>
@@ -158,6 +167,15 @@ export const EditProductLive = ({ listLive }: EditProductLiveProps) => {
       >
         Adicionar Produto +
       </button>
+
+      <DeleteConfirmModal
+        isOpen={openDeleteVinculationProductModal}
+        loading={loadingDeleteVinculationProducts}
+        onClose={() => setOpenDeleteVinculationProductModal(false)}
+        onDelete={() =>
+          handleDeleteVinculationProduct(vinculationProductsObject, removeIndex)
+        }
+      />
     </div>
   );
 };

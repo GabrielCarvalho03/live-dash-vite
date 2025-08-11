@@ -18,6 +18,9 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src"],
+  "include": [
+    "src",
+    "src/modules/live/components/filters/filterLiveContent.tsx"
+  ],
   "exclude": ["node_modules", "dist"]
 }

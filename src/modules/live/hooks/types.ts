@@ -34,6 +34,16 @@ export type allVinculationProductsObj = {
   userId: string;
 };
 
+export type applyFiltersLiveProps = {
+  search: string;
+  status: string;
+  date?: Date;
+};
+export type applyFiltersProductsProps = {
+  search: string;
+  liveLinculate: string;
+};
+
 export interface LiveRegisterType {
   modalCreateLiveIsOpen: boolean;
   setModalCreateLiveIsOpen: (value: boolean) => void;
@@ -62,9 +72,16 @@ export interface LiveRegisterType {
 
   liveList: liveObject[];
   setLiveList: (value: liveObject[]) => void;
+
+  liveListFilter: liveObject[];
+  setLiveListFilter: (value: liveObject[]) => void;
+
   loadingLiveList: boolean;
   setLoadingLiveList: (value: boolean) => void;
   handleGetLive: () => Promise<liveObject[] | undefined>;
+  handleGetLiveByUser: (
+    id: string | undefined
+  ) => Promise<liveObject[] | undefined>;
   handleCreateLive: (data: LiveCreateSchemaData) => Promise<void>;
 
   loadingUpdateLive: boolean;
@@ -83,6 +100,11 @@ export interface VinculationProduct {
   loadingisGetAllVinculationProduct: boolean;
   setLoadingisGetAllVinculationProduct: (value: boolean) => void;
 
+  allVinculationProductsFiltered: allVinculationProductsObj[];
+  setAllViculationProductsFiltered: (
+    value: allVinculationProductsObj[]
+  ) => void;
+
   allVinculationProducts: allVinculationProductsObj[];
   setAllViculationProducts: (value: allVinculationProductsObj[]) => void;
   handleGetAllVinculationProduct: () => Promise<void>;
@@ -99,7 +121,8 @@ export interface VinculationProduct {
   loadingDeleteVinculationProducts: boolean;
   setLoadingDeleteVinculationProducts: (value: boolean) => void;
   handleDeleteVinculationProduct: (
-    data: allVinculationProductsObj
+    data: allVinculationProductsObj,
+    index?: number
   ) => Promise<void>;
 
   handleChange: (
@@ -111,4 +134,26 @@ export interface VinculationProduct {
   addProduct: () => void;
   removeProduct: (index: number) => void;
   handleDragEnd: (event: any) => void;
+}
+
+export interface useFilterLiveProps {
+  searchLive: string;
+  setSearchLive: (value: string) => void;
+  statusFilterLive: string;
+  setStatusFilterLive: (value: string) => void;
+  dateFilter: Date | undefined;
+  setDateFilter: (value: Date | undefined) => void;
+  applyFilters: ({ search, status, date }: applyFiltersLiveProps) => void;
+  clearFilter: () => void;
+}
+
+export interface useFilterProductsProps {
+  searchProduct: string;
+  setSearchProduct: (value: string) => void;
+  statusFilterProduct: string;
+  setStatusFilterProduct: (value: string) => void;
+  LiveVinculateFilter: string;
+  setLiveVinculateFilter: (value: string) => void;
+  applyFilters: ({ search, liveLinculate }: applyFiltersProductsProps) => void;
+  clearFilter: () => void;
 }

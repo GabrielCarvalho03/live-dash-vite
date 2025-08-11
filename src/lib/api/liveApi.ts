@@ -6,8 +6,6 @@ import { useAuthStore } from "@/shared/hooks/Auth/useAuth";
 
 const baseURL = import.meta.env.VITE_LIVE_API_URL;
 
-console.log("baseURL", baseURL);
-
 export const LiveApi = axios.create({
   baseURL,
   withCredentials: true,
@@ -36,7 +34,10 @@ LiveApi.interceptors.request.use(async (req) => {
     console.log("Erro ao decodificar o token");
   }
 
-  const tokenIsExpired = dayjs.unix(decodeToken.exp).diff(dayjs()) < 1;
+  const tokenIsExpired = dayjs.unix(decodeToken.exp).diff(dayjs()) < 300;
+
+  console.log("Token expirado:", tokenIsExpired);
+  console.log("Tempo restante:", dayjs.unix(decodeToken.exp).diff(dayjs()));
 
   if (tokenIsExpired && refreshToken) {
     if (isRefreshing) {
@@ -67,10 +68,13 @@ LiveApi.interceptors.request.use(async (req) => {
 
         waiters.forEach((w) => w(newToken));
         waiters = [];
-      } catch (err) {
+      } catch (err: any) {
         console.error("Erro ao renovar token:", err);
-        localStorage.clear();
-        window.location.href = "/";
+        // Só fazer logout se for erro de autenticação específico
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          localStorage.clear();
+          window.location.href = "/";
+        }
         throw err;
       } finally {
         isRefreshing = false;

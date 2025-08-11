@@ -1,95 +1,24 @@
 "use client";
 
-import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import { Input } from "@/shared/components/ui/input";
-import {
-  Plus,
-  Tv,
-  CalendarClock,
-  Eye,
-  Filter,
-  Pencil,
-  Play,
-  Trash,
-  ChevronDown,
-  Loader2,
-  Blocks,
-  Video,
-  Package,
-} from "lucide-react";
-import { CreateLiveStepsModal } from "../components/createLiveSteps/createLiveSteps";
+import { Plus, Tv, CalendarClock, Eye, Video, Package } from "lucide-react";
 import { useLive } from "../hooks/useLive";
 import { useEffect } from "react";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
-import dayjs from "dayjs";
-import { Loader } from "@/shared/components/loader/loader";
-import { StatusLive } from "../components/statusLive/statusLive";
-import { CategorieLive } from "../components/categorieLive/categorieLive";
-import { ProductVinculationModal } from "../components/createLiveSteps/products/form";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { TabsContent } from "@radix-ui/react-tabs";
 import LiveContent from "../components/liveContent/liveContent";
 import ProductsContent from "../components/productsContent/productsContent";
-import {
-  Select,
-  SelectValue,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectLabel,
-} from "@/shared/components/ui/select";
-import { useVinculationProductsLive } from "../hooks/useVinculationProducts";
-import { DeleteConfirmModal } from "@/shared/components/deleteConfirmModal/deleteConfirmModal";
-import { useProfille } from "@/shared/hooks/userProfille/useProfille";
-
-const livesMock = [
-  {
-    id: 1,
-    title: "Introdução ao Streaming",
-    description: "Aprenda os conceitos básicos...",
-    status: "Finalizada",
-    category: "educacional",
-    datetime: "15/01/2024 19:00",
-    views: 1250,
-    streamKey: "",
-    rtmpUrl: "",
-  },
-  {
-    id: 2,
-    title: "Gaming Live - Campeonato",
-    description: "Transmissão ao vivo do campeonato...",
-    status: "AO VIVO",
-    category: "gaming",
-    datetime: "20/01/2024 20:00",
-    views: 3420,
-    streamKey: "abc123xyz",
-    rtmpUrl: "rtmp://livepeer.com/live",
-  },
-  {
-    id: 3,
-    title: "Tutorial OBS Studio",
-    description: "Como configurar o OBS Studio...",
-    status: "Agendada",
-    category: "tutorial",
-    datetime: "25/01/2024 14:00",
-    views: 0,
-    streamKey: "streamkey456",
-    rtmpUrl: "rtmp://livepeer.com/live",
-  },
-];
 
 export default function Lives() {
   const { user, setUser, handleGetUserById } = useLogin();
   const {
-    modalCreateLiveIsOpen,
     liveList,
-    setModalCreateLiveIsOpen,
     handleOpenCreateLiveModal,
     handleGetLive,
+    handleGetLiveByUser,
   } = useLive();
-  const { updateFusoUser } = useProfille();
 
   const resumo = {
     aoVivo: liveList?.filter((l) => l.status === "live").length,
@@ -101,16 +30,22 @@ export default function Lives() {
     if (!user?._id) {
       GetDataForPage();
     }
-    if (!liveList) {
-      handleGetLive();
-    }
   }, []);
+
+  useEffect(() => {
+    if (!liveList.length && user?.userType === "Admin") {
+      handleGetLive();
+
+      return;
+    }
+    if (!liveList.length && user?.userType === "User") {
+      handleGetLiveByUser(user?._id);
+    }
+  }, [liveList]);
 
   const GetDataForPage = async () => {
     const user = await handleGetUserById();
     setUser(user);
-
-    await handleGetLive();
   };
 
   return (
@@ -124,34 +59,6 @@ export default function Lives() {
         </div>
 
         <div className="flex gap-5">
-          <div>
-            <Select
-              value={user?.hourFuse ?? "brasilia"}
-              onValueChange={(fuso) =>
-                updateFusoUser({ fuso, userId: user?._id ?? "" })
-              }
-            >
-              <SelectTrigger className="w-[280px]">
-                <SelectValue placeholder="Selecione o fuso horário" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="brasilia">
-                  (GMT -3:00) hora de Brasília
-                </SelectItem>
-                <SelectItem value="noronha">
-                  (GMT -2:00) hora de Fernando de Noronha
-                </SelectItem>
-                <SelectItem value="amazonas">
-                  (GMT -4:00) hora do Amazonas
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-            <p className="text-xs text-gray-400">
-              Os produtos apareceram no fuso horário do criador
-            </p>
-          </div>
-
           <Button
             className="bg-primary text-white hover:bg-primary/90"
             onClick={() => handleOpenCreateLiveModal()}

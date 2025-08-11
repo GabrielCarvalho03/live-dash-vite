@@ -13,6 +13,7 @@ export const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
 let isRefreshing = false;
 let waiters: ((token: string) => void)[] = [];
 
@@ -34,7 +35,10 @@ api.interceptors.request.use(async (req) => {
     console.log("Erro ao decodificar o token");
   }
 
-  const tokenIsExpired = dayjs.unix(decodeToken.exp).diff(dayjs()) < 1;
+  const tokenIsExpired = dayjs.unix(decodeToken.exp).diff(dayjs()) < 300;
+
+  console.log("Token expirado:", tokenIsExpired);
+  console.log("Tempo restante:", dayjs.unix(decodeToken.exp).diff(dayjs()));
 
   if (tokenIsExpired && refreshToken) {
     if (isRefreshing) {
@@ -65,10 +69,12 @@ api.interceptors.request.use(async (req) => {
 
         waiters.forEach((w) => w(newToken));
         waiters = [];
-      } catch (err) {
+      } catch (err: any) {
         console.error("Erro ao renovar token:", err);
-        localStorage.clear();
-        window.location.href = "/";
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          localStorage.clear();
+          window.location.href = "/";
+        }
         throw err;
       } finally {
         isRefreshing = false;
