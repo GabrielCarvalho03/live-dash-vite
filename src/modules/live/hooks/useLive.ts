@@ -137,11 +137,16 @@ export const useLive = create<LiveRegisterType>((set) => ({
       useLive.getState();
     try {
       setLoadingLiveList(true);
-      const lives = await LiveApi.get(`/lives/user/${id}`);
-      setLiveList(lives.data.data);
-      setLiveListFilter(lives.data.data);
+      const lives = await LiveApi.get(`/live/user/${id}`);
+      const listLiveUser = lives.data.data;
 
-      return lives.data.data;
+      console.log("lives user", listLiveUser);
+      if (listLiveUser.length) {
+        setLiveList(listLiveUser);
+        setLiveListFilter(listLiveUser);
+        return listLiveUser;
+      }
+      toast.error("Nenhuma live encontrada");
     } catch (error: any) {
       toast.error("Erro ao buscar live", {
         description: `${error.response.data.error}`,

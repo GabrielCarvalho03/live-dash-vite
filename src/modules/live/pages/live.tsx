@@ -4,15 +4,17 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Plus, Tv, CalendarClock, Eye, Video, Package } from "lucide-react";
 import { useLive } from "../hooks/useLive";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { TabsContent } from "@radix-ui/react-tabs";
 import LiveContent from "../components/liveContent/liveContent";
 import ProductsContent from "../components/productsContent/productsContent";
+import { GetLiveForUserOrAdmin } from "@/shared/utils/getLiveForUserOrAdmin";
 
 export default function Lives() {
-  const { user, setUser, handleGetUserById } = useLogin();
+  const [hasLoadedLives, setHasLoadedLives] = useState(false);
+  const { user, setUser, handleGetUserById, setLoginisLoading } = useLogin();
   const {
     liveList,
     handleOpenCreateLiveModal,
@@ -27,26 +29,27 @@ export default function Lives() {
   };
 
   useEffect(() => {
-    if (!user?._id) {
-      GetDataForPage();
-    }
+    const initializeData = async () => {
+      if (!user?._id && !hasLoadedLives) {
+        setLoginisLoading(true);
+        const userData = await handleGetUserById();
+
+        if (userData?._id) {
+          setUser(userData);
+          setHasLoadedLives(true); // Marca como carregado
+          await GetLiveForUserOrAdmin(userData);
+        }
+      }
+    };
+
+    initializeData();
   }, []);
-
   useEffect(() => {
-    if (!liveList.length && user?.userType === "Admin") {
-      handleGetLive();
-
-      return;
+    if (user?._id && liveList.length === 0 && !hasLoadedLives) {
+      setHasLoadedLives(true); // Marca como carregado
+      GetLiveForUserOrAdmin(user);
     }
-    if (!liveList.length && user?.userType === "User") {
-      handleGetLiveByUser(user?._id);
-    }
-  }, [liveList]);
-
-  const GetDataForPage = async () => {
-    const user = await handleGetUserById();
-    setUser(user);
-  };
+  }, [user?._id]);
 
   return (
     <div className="space-y-6">

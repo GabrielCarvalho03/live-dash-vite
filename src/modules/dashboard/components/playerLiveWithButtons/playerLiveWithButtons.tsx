@@ -30,10 +30,11 @@ export function PlayerWithControls(props: { src: Src[] | null }) {
   }
 
   return (
-    <Player.Root src={props.src}>
+    <Player.Root src={props.src} autoPlay lowLatency>
       <Player.Container className="h-full w-full overflow-hidden rounded-lg bg-black outline-none transition">
         <Player.Video
           title="Live stream"
+          playsInline
           className={cn("h-full w-full transition")}
         />
 
