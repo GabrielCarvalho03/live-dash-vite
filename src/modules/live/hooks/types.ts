@@ -22,6 +22,8 @@ export type liveObject = {
   streamKey: string;
   url_RTMP: string;
   views: string;
+  peerID: string;
+  steamID: string;
 };
 
 export type allVinculationProductsObj = {

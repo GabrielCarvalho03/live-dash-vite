@@ -16,6 +16,7 @@ type DeleteConfirmModalProps = {
   title?: string;
   description?: string;
   loading: boolean;
+  actionButtonText?: string;
 };
 
 export const DeleteConfirmModal = ({
@@ -23,6 +24,7 @@ export const DeleteConfirmModal = ({
   description,
   loading,
   isOpen,
+  actionButtonText,
   onClose,
   onDelete,
 }: DeleteConfirmModalProps) => {
@@ -55,7 +57,13 @@ export const DeleteConfirmModal = ({
             className="bg-red-500"
             onClick={() => onDelete()}
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Excluir"}
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : actionButtonText ? (
+              actionButtonText
+            ) : (
+              "Excluir"
+            )}
           </Button>
         </CardFooter>
       </Card>

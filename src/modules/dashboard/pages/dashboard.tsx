@@ -41,6 +41,7 @@ import { GetLiveForUserOrAdmin } from "@/shared/utils/getLiveForUserOrAdmin";
 import { Loader } from "@/shared/components/loader/loader";
 import { ChatComponent } from "../components/chatComponent/chatComponent";
 import { useUser } from "@/modules/users/hooks/useUser";
+import { DeleteConfirmModal } from "@/shared/components/deleteConfirmModal/deleteConfirmModal";
 
 type Message = {
   id: number;
@@ -87,7 +88,13 @@ function LiveIndicator() {
 export default function Dashboard() {
   const { user, setUser, handleGetUserById, loginisLoading } = useLogin();
   const { liveList, loadingLiveList } = useLive();
-  const { ChangePasswordFristAcessModal } = useDashboard();
+  const {
+    ChangePasswordFristAcessModal,
+    openDeleteLiveModal,
+    deleteLiveISLoading,
+    setOpenDeleteLiveModal,
+    handleDeleteLive,
+  } = useDashboard();
   const [actualLive, setActualLive] = useState<liveObject | undefined>(
     {} as liveObject
   );
@@ -282,7 +289,10 @@ export default function Dashboard() {
                       )}
 
                       {livesAtivas.length > 0 && (
-                        <Button className="bg-red-500 hover:bg-red-600">
+                        <Button
+                          onClick={() => setOpenDeleteLiveModal(true)}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
                           <CircleStop />
                         </Button>
                       )}
@@ -336,7 +346,7 @@ export default function Dashboard() {
                           <PlayerWithControls
                             src={[
                               {
-                                src: `https://livepeercdn.studio/hls/${"c98bje88y8pb2g43"}/index.m3u8`,
+                                src: `https://livepeercdn.studio/hls/${"2954hdzgw7azsitw"}/index.m3u8`,
                                 height: 300,
                                 mime: "application/mp4",
                                 type: "hls",
@@ -489,6 +499,16 @@ export default function Dashboard() {
         )}
       </>
       <ChangePasswordModal isOpen={ChangePasswordFristAcessModal} />
+      <DeleteConfirmModal
+        title="Tem certeza que deseja encerrar a live?"
+        actionButtonText="Encerrar"
+        isOpen={openDeleteLiveModal}
+        onClose={() => setOpenDeleteLiveModal(false)}
+        onDelete={() =>
+          handleDeleteLive(actualLive?.steamID ?? livesAtivas[0]?.steamID)
+        }
+        loading={deleteLiveISLoading}
+      />
     </div>
   );
 }
