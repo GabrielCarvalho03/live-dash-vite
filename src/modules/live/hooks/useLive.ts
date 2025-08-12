@@ -1,15 +1,14 @@
 import { create } from "zustand";
 import { liveObject, LiveRegisterType } from "./types";
 import { toast } from "sonner";
-import { api } from "@/lib/axios";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
-import { boolean, date, promise } from "zod";
 import { LiveApi } from "@/lib/api/liveApi";
 import { GetTokenUser } from "@/shared/utils/getTokenUser";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { defaultHour } from "../utils/defualtHour";
 import { useVinculationProductsLive } from "./useVinculationProducts";
+
 export const useLive = create<LiveRegisterType>((set) => ({
   modalCreateLiveIsOpen: false,
   setModalCreateLiveIsOpen: (value) => set({ modalCreateLiveIsOpen: value }),
@@ -28,6 +27,12 @@ export const useLive = create<LiveRegisterType>((set) => ({
 
   liveList: [],
   setLiveList: (value) => set({ liveList: value }),
+
+  liveListFilter: [],
+  setLiveListFilter: (liveListFilter) => set({ liveListFilter }),
+
+  liveEdit: false,
+  setLiveEdit: (liveEdit) => set({ liveEdit }),
 
   liveEditObject: {} as liveObject,
   setLiveEditObject: (value) => set({ liveEditObject: value }),
@@ -49,6 +54,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
     const {
       liveList,
       setLiveList,
+      setLiveListFilter,
       setOpenDeleteLiveModal,
       setLoadingDeleteLive,
     } = useLive.getState();
@@ -87,6 +93,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
       const newList = liveList.filter((item) => item._id !== data._id);
 
       setLiveList(newList);
+      setLiveListFilter(newList);
       setOpenDeleteLiveModal(false);
 
       toast.success("Deletado com sucesso", {
@@ -104,15 +111,15 @@ export const useLive = create<LiveRegisterType>((set) => ({
   loadingLiveList: false,
   setLoadingLiveList: (loadingLiveList: boolean) => set({ loadingLiveList }),
   handleGetLive: async () => {
-    const { setLiveList, setLoadingLiveList } = useLive.getState();
+    const { setLiveList, setLoadingLiveList, setLiveListFilter } =
+      useLive.getState();
 
     try {
       setLoadingLiveList(true);
       const lives = await LiveApi.get("/lives");
 
-      console.log("lives", lives.data);
-
       setLiveList(lives.data.data);
+      setLiveListFilter(lives.data?.data);
 
       return lives.data.data;
     } catch (error: any) {
@@ -125,12 +132,38 @@ export const useLive = create<LiveRegisterType>((set) => ({
 
     return;
   },
+  handleGetLiveByUser: async (id) => {
+    const { setLiveList, setLoadingLiveList, setLiveListFilter } =
+      useLive.getState();
+    try {
+      setLoadingLiveList(true);
+      const lives = await LiveApi.get(`/live/user/${id}`);
+      const listLiveUser = lives.data.data;
+
+      console.log("lives user", listLiveUser);
+      if (listLiveUser.length) {
+        setLiveList(listLiveUser);
+        setLiveListFilter(listLiveUser);
+        return listLiveUser;
+      }
+      toast.error("Nenhuma live encontrada");
+    } catch (error: any) {
+      toast.error("Erro ao buscar live", {
+        description: `${error.response.data.error}`,
+      });
+    } finally {
+      setLoadingLiveList(false);
+    }
+
+    return undefined;
+  },
   handleCreateLive: async (data) => {
     try {
       const { user } = useLogin.getState();
       const {
         liveList,
         setLiveList,
+        setLiveListFilter,
         setActualSaveSchedule,
         setTotalLiveSchedule,
       } = useLive.getState();
@@ -156,9 +189,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
             const response = await LiveApi.post(
               "/live/create",
               {
-                user: {
-                  userType: user?.userType,
-                },
+                user: user,
                 data: {
                   image: data.image,
                   title: data.title,
@@ -171,6 +202,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
                     hour: item.hour,
                   },
                   userName: user?.name ?? "",
+                  userAvatar: user?.avatar,
                   url_play:
                     "http://meuservidor.tv:8080/live/interativa/index.m3u8",
                   status: data.status,
@@ -193,6 +225,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
             });
 
             setLiveList([...liveList, response.data.live]);
+            setLiveListFilter([...liveList, response.data.live]);
           } catch (error: any) {
             console.log("erro", error);
             toast.dismiss("loadingLive");
@@ -220,9 +253,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
         description: `${1} de ${1}`,
       });
       const response = await LiveApi.post("/live/create", {
-        user: {
-          userType: user?.userType,
-        },
+        user: user,
         data: {
           image: data.image,
           title: data.title,
@@ -237,6 +268,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
           url_play: "http://meuservidor.tv:8080/live/interativa/index.m3u8",
           status: data.status,
           userName: user?.name ?? "",
+          userAvatar: user?.avatar,
           userId: user?._id,
           likes: 0,
           liked_by: [],
@@ -259,11 +291,219 @@ export const useLive = create<LiveRegisterType>((set) => ({
       setTotalLiveSchedule(0);
 
       setLiveList([...liveList, response.data.live]);
+      setLiveListFilter([...liveList, response.data.live]);
     } catch (error: any) {
       toast.dismiss("loadingLive");
       toast.error("Erro ao criar live", {
         description: `${error.response.data.error}`,
       });
     }
+  },
+
+  loadingUpdateLive: false,
+  setLoadingUpdateLive: (loadingUpdateLive) => set({ loadingUpdateLive }),
+  handleUpdateLive: async (data) => {
+    const { user } = useLogin.getState();
+    const {
+      liveEditObject,
+      liveList,
+      setLiveList,
+      setLiveListFilter,
+      setModalCreateLiveIsOpen,
+      setLoadingUpdateLive,
+    } = useLive.getState();
+    const { listProductsEdited } = useVinculationProductsLive.getState();
+
+    const token = GetTokenUser();
+    const LiveIsSchedule = data.status === "scheduled";
+
+    try {
+      if (LiveIsSchedule) {
+        const listDaysLive = data.allSchedules;
+        // setTotalLiveSchedule(data.allSchedules.length);
+
+        for (const item of listDaysLive) {
+          const {
+            actualSaveSchedule,
+            liveList,
+            setLiveList,
+            setLiveListFilter,
+          } = useLive.getState();
+          // setActualSaveSchedule(actualSaveSchedule + 1);
+
+          toast.loading("Editando live", {
+            id: "loadingLive",
+            description: `${actualSaveSchedule + 1} de ${listDaysLive.length}`,
+          });
+
+          const dataToUpdate = {
+            image: data.image,
+            title: data.title,
+            category: data.category,
+            description: data.description ?? "",
+            dayLive: {
+              date: item.date,
+              day: item.day,
+              hour: item.hour,
+            },
+            status: data.status,
+          };
+
+          try {
+            const response = await LiveApi.put(
+              `/live/${liveEditObject?._id}`,
+              dataToUpdate,
+              {
+                headers: {
+                  Authorization: token,
+                },
+              }
+            );
+
+            const updatedLiveList = liveList.map((live) =>
+              live._id === liveEditObject._id
+                ? {
+                    ...live,
+                    image: data.image,
+                    title: data.title,
+                    category: data.category,
+                    description: data.description ?? "",
+                    dayLive: {
+                      date: item.date,
+                      day: item.day,
+                      hour: item.hour,
+                    },
+                    status: data.status,
+                  }
+                : live
+            );
+            setLiveList(updatedLiveList);
+            setLiveListFilter(updatedLiveList);
+          } catch (error: any) {
+            console.log("erro", error);
+            toast.dismiss("loadingLive");
+            toast.error("Erro ao criar live", {
+              description: `${error.response.data.error}`,
+            });
+          }
+        }
+        toast.dismiss("loadingLive");
+        toast.success("Live Editada com sucesso", {
+          description: `Live ${data.title} foi atualizada com sucesso.`,
+        });
+      } else {
+        const dayName = format(new Date(), "EEEE", {
+          locale: ptBR,
+        });
+        const dataToUpdate = {
+          image: data.image,
+          title: data.title,
+          category: data.category,
+          description: data.description ?? "",
+          status: data.status,
+          dayLive: {
+            date: new Date().toISOString(),
+            day: dayName,
+            hour: defaultHour(),
+          },
+        };
+
+        const response = await LiveApi.put(
+          `/live/${liveEditObject?._id}`,
+          dataToUpdate,
+          {
+            headers: {
+              Authorization: token,
+            },
+          }
+        );
+
+        const updatedLiveList = liveList.map((live) =>
+          live._id === liveEditObject._id
+            ? {
+                ...live,
+                image: data.image,
+                title: data.title,
+                category: data.category,
+                description: data.description ?? "",
+                status: data.status,
+                dayLive: {
+                  date: new Date().toISOString(),
+                  day: dayName,
+                  hour: defaultHour(),
+                },
+              }
+            : live
+        );
+        toast.success("Live Editada com sucesso", {
+          description: `Live ${data.title} foi atualizada com sucesso.`,
+        });
+        setLiveList(updatedLiveList);
+        setLiveListFilter(updatedLiveList);
+      }
+
+      toast.loading("Atualizando Produtos", {
+        id: "updateProduct",
+      });
+
+      for (let item of listProductsEdited) {
+        const { allVinculationProducts, setAllViculationProducts } =
+          useVinculationProductsLive.getState();
+
+        try {
+          if (item._id === "") {
+            const res = await LiveApi.post(`/live/product/vinculation`, {
+              products: [
+                {
+                  name: item.name,
+                  link: item.link,
+                  hourStart: item.hourStart,
+                  hourEnd: item.hourEnd,
+                },
+              ],
+              userId: user?._id,
+              liveId: liveEditObject._id,
+            });
+
+            window.location.reload();
+          } else {
+            await LiveApi.put(`/live/product/${item._id}`, {
+              name: item.name,
+              link: item.link,
+              hourStart: item.hourStart,
+              hourEnd: item.hourEnd,
+            });
+          }
+
+          const newProductsEdited = allVinculationProducts?.map((product) =>
+            product._id === item._id
+              ? {
+                  ...product,
+                  name: item.name,
+                  link: item.link,
+                  hourStart: item.hourStart,
+                  hourEnd: item.hourEnd,
+                }
+              : product
+          );
+          setAllViculationProducts(newProductsEdited);
+        } catch (error: any) {
+          toast.error("Erro ao atualizar produtos", {
+            description: `${error.response?.data?.error}`,
+          });
+        } finally {
+          toast.dismiss("updateProduct");
+        }
+      }
+    } catch (error: any) {
+      toast.error("Erro ao atualizar live", {
+        description: `${error.response?.data?.error}`,
+      });
+    } finally {
+      setLoadingUpdateLive(false);
+      setModalCreateLiveIsOpen(false);
+    }
+
+    return;
   },
 }));

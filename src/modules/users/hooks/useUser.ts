@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
 import { GetTokenUser } from "@/shared/utils/getTokenUser";
 import { user } from "@/modules/auth/hooks/useLoginHook/types";
+import axios from "axios";
 
 export const useUser = create<RegisterType>((set) => ({
   createuserModalOpen: false,
@@ -258,6 +259,30 @@ export const useUser = create<RegisterType>((set) => ({
     } finally {
       setUpdateUserModalOpen(false);
       setUpdateUserObject({} as user);
+    }
+  },
+
+  userVinculateLive: {} as user,
+  setUserVinculateLive: (value) => set({ userVinculateLive: value }),
+  getUSerVinculateLive: async (actualLive) => {
+    const { setUserVinculateLive } = useUser.getState();
+    try {
+      const token = GetTokenUser();
+      const userVinculateLive = await api.get(`/users/${actualLive?.userId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `${token}`,
+        },
+      });
+      console.log("userVinculateLive", userVinculateLive);
+      if (userVinculateLive) {
+        setUserVinculateLive(userVinculateLive.data.data);
+        return userVinculateLive.data.data;
+      }
+    } catch (error: any) {
+      toast.error("Erro ao buscar usuário vinculado a live", {
+        description: error.response.data.error,
+      });
     }
   },
 }));

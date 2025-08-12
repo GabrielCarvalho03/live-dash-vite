@@ -23,14 +23,12 @@ const dayLive = z.object({
   hour: z.string(),
 });
 
-export const LiveCreateSchema = z.object({
+export const LiveEditSchema = z.object({
   title: z.string().min(3, "precisa ter no minimo 3 caracteres"),
   category: z.enum(listCategoryLive, {
     error: "selecione uma categoria",
   }),
-  allSchedules: z.array(dayLive),
-  // url_transmission: z.string(),
-  // url_play: z.string(),
+  dayLive,
   image: z.string({
     error: "precisa de uma capa",
   }),
@@ -41,4 +39,4 @@ export const LiveCreateSchema = z.object({
   description: z.string().optional(),
 });
 
-export type LiveCreateSchemaData = z.infer<typeof LiveCreateSchema>;
+export type LiveEditSchemaData = z.infer<typeof LiveEditSchema>;

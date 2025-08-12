@@ -1,4 +1,4 @@
-import { ChangePessowrDataSchema } from './ChangePasswordSchema';
+import { ChangePessowrDataSchema } from "./ChangePasswordSchema";
 
 type handleChangePasswordFirstAcessProps = {
   data: ChangePessowrDataSchema;
@@ -14,4 +14,11 @@ export interface useDashboardProps {
   handleChangePasswordFirstAcess: ({
     data,
   }: handleChangePasswordFirstAcessProps) => Promise<void>;
+
+  openDeleteLiveModal: boolean;
+  setOpenDeleteLiveModal: (value: boolean) => void;
+
+  deleteLiveISLoading: boolean;
+  setDeleteLiveISLoading: (value: boolean) => void;
+  handleDeleteLive: (id: string) => Promise<void>;
 }

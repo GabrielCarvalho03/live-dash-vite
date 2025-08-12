@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { api } from "@/lib/axios";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
 import { GetTokenUser } from "@/shared/utils/getTokenUser";
+import { LiveApi } from "@/lib/api/liveApi";
 
 export const useDashboard = create<useDashboardProps>((set) => ({
   changePasswordIsLoading: false,
@@ -55,6 +56,39 @@ export const useDashboard = create<useDashboardProps>((set) => ({
       });
     } finally {
       setChangePasswordIsLoading(false);
+    }
+  },
+
+  openDeleteLiveModal: false,
+  setOpenDeleteLiveModal: (value) => set({ openDeleteLiveModal: value }),
+  deleteLiveISLoading: false,
+  setDeleteLiveISLoading: (value) => set({ deleteLiveISLoading: value }),
+  handleDeleteLive: async (id) => {
+    const { setOpenDeleteLiveModal, setDeleteLiveISLoading } =
+      useDashboard.getState();
+    console.log("id", id);
+    try {
+      setDeleteLiveISLoading(true);
+      toast.loading("Encerrando live", {
+        id: "TerminateLive",
+      });
+      const response = await LiveApi.delete("/live/livepeer-terminate", {
+        data: {
+          liveId: id,
+        },
+      });
+
+      toast.success("Live encerrada com sucesso!", {
+        description: "A live foi encerrada, confira na aba de lives.",
+      });
+    } catch (error: any) {
+      toast.error("Erro ao deletar", {
+        description: error?.response?.data?.error,
+      });
+    } finally {
+      setDeleteLiveISLoading(false);
+      setOpenDeleteLiveModal(false);
+      toast.dismiss("TerminateLive");
     }
   },
 }));

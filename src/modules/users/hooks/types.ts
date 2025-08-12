@@ -1,6 +1,7 @@
 import { user } from "@/modules/auth/hooks/useLoginHook/types";
 import { UseCreateDataSchema } from "./usersCreateSchema";
 import { UserUpdateDataSchema } from "./usersUpdateSchema";
+import { liveObject } from "@/modules/live/hooks/types";
 
 export interface RegisterType {
   saveUserisLoading: boolean;
@@ -37,4 +38,10 @@ export interface RegisterType {
 
   handleOpenUpdateUserModal: (id: string) => void;
   handleUpdateUser: (data: UserUpdateDataSchema) => Promise<void>;
+
+  userVinculateLive: user | undefined;
+  setUserVinculateLive: (value: user | undefined) => void;
+  getUSerVinculateLive: (
+    actualLive: liveObject | undefined
+  ) => Promise<user | undefined>;
 }

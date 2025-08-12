@@ -1,4 +1,5 @@
 import { LiveCreateSchemaData } from "./liveCreateSchema";
+import { LiveEditSchemaData } from "./liveEditSchema";
 import { VinculationProductsLiveSchemaData } from "./vinculationProductsLiveSchema";
 
 export type liveObject = {
@@ -19,8 +20,10 @@ export type liveObject = {
   likes: number;
   liked_by: any[];
   streamKey: string;
-  rtmpUrl: string;
+  url_RTMP: string;
   views: string;
+  peerID: string;
+  steamID: string;
 };
 
 export type allVinculationProductsObj = {
@@ -31,6 +34,16 @@ export type allVinculationProductsObj = {
   hourEnd: string;
   liveId: string;
   userId: string;
+};
+
+export type applyFiltersLiveProps = {
+  search: string;
+  status: string;
+  date?: Date;
+};
+export type applyFiltersProductsProps = {
+  search: string;
+  liveLinculate: string;
 };
 
 export interface LiveRegisterType {
@@ -56,12 +69,26 @@ export interface LiveRegisterType {
   setLoadingDeleteLive: (value: boolean) => void;
   handleDeleteLive: (value: liveObject) => Promise<void>;
 
+  liveEdit: boolean;
+  setLiveEdit: (value: boolean) => void;
+
   liveList: liveObject[];
   setLiveList: (value: liveObject[]) => void;
+
+  liveListFilter: liveObject[];
+  setLiveListFilter: (value: liveObject[]) => void;
+
   loadingLiveList: boolean;
   setLoadingLiveList: (value: boolean) => void;
   handleGetLive: () => Promise<liveObject[] | undefined>;
+  handleGetLiveByUser: (
+    id: string | undefined
+  ) => Promise<liveObject[] | undefined>;
   handleCreateLive: (data: LiveCreateSchemaData) => Promise<void>;
+
+  loadingUpdateLive: boolean;
+  setLoadingUpdateLive: (value: boolean) => void;
+  handleUpdateLive: (data: LiveCreateSchemaData) => Promise<void>;
 }
 
 export interface VinculationProduct {
@@ -75,6 +102,11 @@ export interface VinculationProduct {
   loadingisGetAllVinculationProduct: boolean;
   setLoadingisGetAllVinculationProduct: (value: boolean) => void;
 
+  allVinculationProductsFiltered: allVinculationProductsObj[];
+  setAllViculationProductsFiltered: (
+    value: allVinculationProductsObj[]
+  ) => void;
+
   allVinculationProducts: allVinculationProductsObj[];
   setAllViculationProducts: (value: allVinculationProductsObj[]) => void;
   handleGetAllVinculationProduct: () => Promise<void>;
@@ -85,9 +117,45 @@ export interface VinculationProduct {
   openDeleteVinculationProductModal: boolean;
   setOpenDeleteVinculationProductModal: (value: boolean) => void;
 
+  listProductsEdited: allVinculationProductsObj[];
+  setListProductsEdited: (value: allVinculationProductsObj[]) => void;
+
   loadingDeleteVinculationProducts: boolean;
   setLoadingDeleteVinculationProducts: (value: boolean) => void;
   handleDeleteVinculationProduct: (
-    data: allVinculationProductsObj
+    data: allVinculationProductsObj,
+    index?: number
   ) => Promise<void>;
+
+  handleChange: (
+    index: number,
+    field: keyof allVinculationProductsObj,
+    value: string
+  ) => void;
+
+  addProduct: () => void;
+  removeProduct: (index: number) => void;
+  handleDragEnd: (event: any) => void;
+}
+
+export interface useFilterLiveProps {
+  searchLive: string;
+  setSearchLive: (value: string) => void;
+  statusFilterLive: string;
+  setStatusFilterLive: (value: string) => void;
+  dateFilter: Date | undefined;
+  setDateFilter: (value: Date | undefined) => void;
+  applyFilters: ({ search, status, date }: applyFiltersLiveProps) => void;
+  clearFilter: () => void;
+}
+
+export interface useFilterProductsProps {
+  searchProduct: string;
+  setSearchProduct: (value: string) => void;
+  statusFilterProduct: string;
+  setStatusFilterProduct: (value: string) => void;
+  LiveVinculateFilter: string;
+  setLiveVinculateFilter: (value: string) => void;
+  applyFilters: ({ search, liveLinculate }: applyFiltersProductsProps) => void;
+  clearFilter: () => void;
 }
