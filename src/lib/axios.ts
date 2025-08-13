@@ -35,10 +35,10 @@ api.interceptors.request.use(async (req) => {
     console.log("Erro ao decodificar o token");
   }
 
-  const tokenIsExpired = dayjs.unix(decodeToken.exp).diff(dayjs()) < 300;
+  const tokenIsExpired = dayjs.unix(decodeToken?.exp).diff(dayjs()) < 300;
 
   console.log("Token expirado:", tokenIsExpired);
-  console.log("Tempo restante:", dayjs.unix(decodeToken.exp).diff(dayjs()));
+  console.log("Tempo restante:", dayjs.unix(decodeToken?.exp).diff(dayjs()));
 
   if (tokenIsExpired && refreshToken) {
     if (isRefreshing) {

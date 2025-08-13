@@ -170,6 +170,12 @@ export const useLive = create<LiveRegisterType>((set) => ({
 
       const LiveIsSchedule = data.status === "scheduled";
       const token = GetTokenUser();
+      if (data.image == "") {
+        toast.error("Erro ao salvar", {
+          description: "É necessário selecionar uma imagem",
+        });
+        return;
+      }
 
       if (LiveIsSchedule) {
         const listDaysLive = data.allSchedules;

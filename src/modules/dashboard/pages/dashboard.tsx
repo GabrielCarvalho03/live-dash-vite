@@ -7,7 +7,7 @@ import {
   Eye,
   BarChart2,
   TrendingUp,
-  Users as User,
+  Users,
   CircleStop,
 } from "lucide-react";
 import { Separator } from "@radix-ui/react-separator";
@@ -42,6 +42,7 @@ import { Loader } from "@/shared/components/loader/loader";
 import { ChatComponent } from "../components/chatComponent/chatComponent";
 import { useUser } from "@/modules/users/hooks/useUser";
 import { DeleteConfirmModal } from "@/shared/components/deleteConfirmModal/deleteConfirmModal";
+import { CardComponent } from "../components/card/card";
 
 type Message = {
   id: number;
@@ -117,17 +118,7 @@ export default function Dashboard() {
 
   const livesAtivas = liveList?.filter((item) => item.status == "live");
 
-  const currentLiveSource = actualLive?._id ? actualLive : livesAtivas[0];
-
-  const livesAgendadas = [
-    {
-      id: 1,
-      title: "Tutorial OBS Studio",
-      description: "Como configurar o OBS Studio para streaming profissional",
-      datetime: "25/01/2024 às 14:00",
-      category: "tutorial",
-    },
-  ];
+  const livesAgendadas = liveList?.filter((item) => item.status == "scheduled");
   const atividades = [
     {
       id: 1,
@@ -173,83 +164,40 @@ export default function Dashboard() {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
-              <Card className="shadow-sm">
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex justify-between items-center w-full">
-                    <div className="bg-red-100 text-red-500 p-2 rounded-xl">
-                      <Tv className="w-5 h-5" />
-                    </div>
-                    <div className="text-2xl font-bold">
-                      {livesAtivas.length}
-                    </div>
-                  </div>
-                  <p className="text-sm font-medium">Lives Ativas</p>
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className="w-4 h-4 " />
-                    <p className="text-xs text-muted-foreground">
-                      {livesAtivas.length} transmitindo agora
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <CardComponent
+                title="Lives Ativas"
+                description="transmitindo agora"
+                countTotal={livesAtivas.length}
+                Icon={Tv}
+                countNow={livesAtivas.length}
+              />
 
-              <Card className="shadow-sm">
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex justify-between items-center w-full">
-                    <div className="bg-blue-100 text-blue-500  p-2 rounded-xl">
-                      <Clock className="w-5 h-5" />
-                    </div>
-                    <div className="text-2xl font-bold">
-                      {livesAgendadas?.length}
-                    </div>
-                  </div>
-                  <p className="text-sm font-medium">Lives Agendadas</p>
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className="w-4 h-4 " />
-                    <p className="text-xs text-muted-foreground">
-                      {livesAgendadas?.length} próximas lives
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <CardComponent
+                title="Lives Agendadas"
+                description="próximas lives"
+                countTotal={livesAgendadas.length}
+                Icon={Clock}
+                countNow={livesAgendadas.length}
+                className="bg-blue-100 text-blue-500"
+              />
 
-              <Card className="shadow-sm">
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex justify-between items-center w-full">
-                    <div className="bg-green-100 text-green-500 p-2 rounded-xl">
-                      <Eye className="w-5 h-5" />
-                    </div>
-                    <div className="text-2xl font-bold">
-                      {/* {livesAtivas.reduce((acc, cur) => acc + cur.views, 0)} */}
-                    </div>
-                  </div>
-                  <p className="text-sm font-medium">Total de Visualizações</p>
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className="w-4 h-4 " />
-                    <p className="text-xs text-muted-foreground">
-                      {" "}
-                      {/* {livesAtivas.reduce((acc, cur) => acc + cur.views, 0)} */}
-                      Todas as lives
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <CardComponent
+                title="Total de Visualizações"
+                description="   Todas as lives"
+                countTotal={livesAgendadas.length}
+                Icon={Eye}
+                countNow={livesAgendadas.length}
+                className="bg-green-100 text-green-500"
+              />
 
-              <Card className="shadow-sm">
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex justify-between items-center w-full">
-                    <div className="bg-purple-100 text-purple-500 p-2 rounded-xl">
-                      <User />
-                    </div>
-                    <div className="text-2xl font-bold">0</div>
-                  </div>
-                  <p className="text-sm font-medium">Usuários Ativos</p>
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className="w-4 h-4 " />
-                    <p className="text-xs text-muted-foreground">0 total</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <CardComponent
+                title="Usuários Ativos"
+                description=" Total"
+                countTotal={0}
+                Icon={Users}
+                countNow={0}
+                className="bg-purple-100 text-purple-500"
+              />
             </div>
 
             <div className="flex flex-col lg:flex-row gap-4 mt-6">
@@ -406,7 +354,7 @@ export default function Dashboard() {
 
                   {livesAgendadas.map((live) => (
                     <div
-                      key={live.id}
+                      key={live?._id}
                       className="flex justify-between items-center border rounded p-4"
                     >
                       <div>
@@ -415,7 +363,7 @@ export default function Dashboard() {
                           {live.description}
                         </p>
                         <p className="text-xs mt-1 text-muted-foreground">
-                          {live.datetime} -{" "}
+                          {live?.dayLive?.date} -{" "}
                           <span className="capitalize">{live.category}</span>
                         </p>
                       </div>

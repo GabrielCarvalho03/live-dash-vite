@@ -50,6 +50,9 @@ export const useForgotPassword = create<ForgotPasswordTypes>((set) => ({
 
     try {
       setForgotPasswordIsLoading(true);
+
+      console.log("cheogu aqui");
+
       const result = await api.post("/users/forgot-password", data);
 
       toast.success("Email enviado com sucesso", {
@@ -58,6 +61,7 @@ export const useForgotPassword = create<ForgotPasswordTypes>((set) => ({
 
       setForgotPasswordIsSuccess(true);
     } catch (error: any) {
+      console.log("error ao criar login", error);
       toast.error("Erro ao enviar o email", {
         description: error?.response?.data?.error,
       });

@@ -15,12 +15,7 @@ import { GetLiveForUserOrAdmin } from "@/shared/utils/getLiveForUserOrAdmin";
 export default function Lives() {
   const [hasLoadedLives, setHasLoadedLives] = useState(false);
   const { user, setUser, handleGetUserById, setLoginisLoading } = useLogin();
-  const {
-    liveList,
-    handleOpenCreateLiveModal,
-    handleGetLive,
-    handleGetLiveByUser,
-  } = useLive();
+  const { liveList, handleOpenCreateLiveModal } = useLive();
 
   const resumo = {
     aoVivo: liveList?.filter((l) => l.status === "live").length,
