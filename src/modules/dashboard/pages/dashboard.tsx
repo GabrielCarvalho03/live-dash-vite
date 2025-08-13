@@ -1,15 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  Tv,
-  Clock,
-  Eye,
-  BarChart2,
-  TrendingUp,
-  Users,
-  CircleStop,
-} from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Tv, Clock, Eye, BarChart2, Users, CircleStop } from "lucide-react";
 import { Separator } from "@radix-ui/react-separator";
 import { Label } from "@radix-ui/react-label";
 import { Badge } from "@/shared/components/ui/badge";
@@ -26,7 +18,6 @@ import {
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { useLive } from "@/modules/live/hooks/useLive";
-import { NotComentLives } from "../components/NotComentLives/notComentLives";
 import {
   Select,
   SelectContent,
@@ -43,33 +34,7 @@ import { ChatComponent } from "../components/chatComponent/chatComponent";
 import { useUser } from "@/modules/users/hooks/useUser";
 import { DeleteConfirmModal } from "@/shared/components/deleteConfirmModal/deleteConfirmModal";
 import { CardComponent } from "../components/card/card";
-
-type Message = {
-  id: number;
-  user: string;
-  text: string;
-};
-
-type Chats = {
-  [key: number]: Message[];
-};
-
-const mockChats: Chats = {
-  1: [
-    { id: 1, user: "João", text: "Vamos torcer!" },
-    { id: 2, user: "Ana", text: "Boraaa 🔥" },
-  ],
-  2: [{ id: 1, user: "Carlos", text: "Ansioso por esse conteúdo!" }],
-  3: [
-    { id: 1, user: "Lia", text: "Já vai começar?" },
-    { id: 2, user: "Pedro", text: "To aqui!" },
-  ],
-};
-
-type LiveOption = {
-  id: number;
-  title: string;
-};
+import { RecentsActivity } from "../components/recentsActivity/recentsActivity";
 
 function LiveIndicator() {
   return (
@@ -107,38 +72,25 @@ export default function Dashboard() {
     }
   }, []);
 
+  const hasFetchedLives = useRef(false);
+
   useEffect(() => {
-    if (!liveList.length) GetLiveForUserOrAdmin(user);
-  }, [liveList, user?._id]);
+    if (hasFetchedLives.current) return;
+    if (!liveList.length) {
+      GetLiveForUserOrAdmin(user);
+      hasFetchedLives.current = true;
+    }
+  }, [user?._id]);
 
   const getUser = async () => {
     const user = await handleGetUserById();
+    GetLiveForUserOrAdmin(user);
     setUser(user);
   };
 
   const livesAtivas = liveList?.filter((item) => item.status == "live");
 
   const livesAgendadas = liveList?.filter((item) => item.status == "scheduled");
-  const atividades = [
-    {
-      id: 1,
-      titulo: "Live Tutorial OBS",
-      data: "25/01/2024 às 14:00",
-      status: "Finalizada",
-    },
-    {
-      id: 2,
-      titulo: "Live ReactJS Avançado",
-      data: "01/07/2025 às 18:00",
-      status: "Ao Vivo",
-    },
-    {
-      id: 3,
-      titulo: "Live de Setup",
-      data: "05/07/2025 às 20:00",
-      status: "Agendada",
-    },
-  ];
 
   return (
     <div className="min-h-screen overflow-y-hidden mb-5">
@@ -294,10 +246,10 @@ export default function Dashboard() {
                           <PlayerWithControls
                             src={[
                               {
-                                src: `https://livepeercdn.studio/hls/${"2954hdzgw7azsitw"}/index.m3u8`,
+                                src: `https://livepeercdn.studio/hls/${"c3977vb2hgd3f6pg"}/index.m3u8`,
                                 height: 300,
                                 mime: "application/mp4",
-                                type: "hls",
+                                type: "webrtc",
                                 width: 900,
                               },
                             ]}
@@ -376,49 +328,7 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
-              <Card className="shadow-sm">
-                <CardContent className="p-4 space-y-4">
-                  <Label className="text-base font-semibold flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-blue-600" />
-                    Atividade Recente
-                  </Label>
-
-                  {atividades.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between border rounded-md p-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="bg-blue-100 p-2 rounded-xl text-blue-600">
-                          <Tv className="w-5 h-5" />
-                        </div>
-
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-sm">
-                            {item.titulo}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {item.data}
-                          </span>
-                        </div>
-                      </div>
-
-                      <Badge
-                        variant="outline"
-                        className={
-                          item.status === "Ao Vivo"
-                            ? "border-red-500 text-red-600 bg-red-100"
-                            : item.status === "Agendada"
-                            ? "border-blue-500 text-blue-600 bg-blue-100"
-                            : "border-gray-400 text-gray-600 bg-gray-100"
-                        }
-                      >
-                        {item.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+              <RecentsActivity />
 
               <Card className="shadow-sm">
                 <CardContent className="p-4">

@@ -12,7 +12,7 @@ import {
   Blocks,
   Link,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
 import dayjs from "dayjs";
 import { useLive } from "../../hooks/useLive";
@@ -57,23 +57,22 @@ export default function LiveContent() {
     handleGetLiveByUser,
   } = useLive();
 
+  const hasFetchedLives = useRef(false);
+
   useEffect(() => {
-    if (!liveList.length && user?.userType === "Admin") {
+    if (hasFetchedLives.current) return;
+    if (user?.userType === "Admin") {
       handleGetLive();
+      hasFetchedLives.current = true;
       return;
     }
-    if (!liveList.length && user?.userType === "User") {
+    if (user?.userType === "User") {
       handleGetLiveByUser(user?._id);
+      hasFetchedLives.current = true;
     }
-  }, [liveList, user]);
+  }, [user]);
 
-  const GetDataForPage = async () => {
-    const user = await handleGetUserById();
-    setUser(user);
 
-    await handleGetLive();
-    await handleGetAllVinculationProduct();
-  };
 
   const verifyLiveForEdit = (data: liveObject) => {
     if (data.status === "live") {
@@ -104,12 +103,12 @@ export default function LiveContent() {
       ) : (
         <>
           {liveList.length > 0 && <FilterLiveContent />}
+          {!loadingLiveList && !liveList.length && (
+            <NotFoundTable />
+          )}
 
           <div className="w-full">
-            {!loadingLiveList &&
-            (!liveList.length || !liveListFilter?.length) ? (
-              <NotFoundTable />
-            ) : (
+            {!loadingLiveList && liveList.length > 0 && liveListFilter?.length > 0 && (
               <>
                 <div className="hidden md:grid md:grid-cols-6 bg-gray-50 px-6 py-3 text-sm font-semibold text-gray-700 border-b">
                   <span className="text-left">Live</span>
@@ -120,7 +119,7 @@ export default function LiveContent() {
                   <span className="text-left">Ações</span>
                 </div>
 
-                {liveListFilter?.map((live, index) => {
+                {!liveListFilter.length ?  <NotFoundTable/>: liveListFilter?.map((live, index) => {
                   const productOfLive = allVinculationProducts.find(
                     (item) => item.liveId === live._id
                   );

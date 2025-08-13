@@ -108,7 +108,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
     }
   },
 
-  loadingLiveList: false,
+  loadingLiveList: true,
   setLoadingLiveList: (loadingLiveList: boolean) => set({ loadingLiveList }),
   handleGetLive: async () => {
     const { setLiveList, setLoadingLiveList, setLiveListFilter } =

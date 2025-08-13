@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent } from "@/shared/components/ui/card";
 import { Plus, Tv, CalendarClock, Eye, Video, Package } from "lucide-react";
 import { useLive } from "../hooks/useLive";
 import { useEffect, useState } from "react";
@@ -11,6 +10,7 @@ import { TabsContent } from "@radix-ui/react-tabs";
 import LiveContent from "../components/liveContent/liveContent";
 import ProductsContent from "../components/productsContent/productsContent";
 import { GetLiveForUserOrAdmin } from "@/shared/utils/getLiveForUserOrAdmin";
+import { CardInfo } from "../components/cardInfo/cardInfo";
 
 export default function Lives() {
   const [hasLoadedLives, setHasLoadedLives] = useState(false);
@@ -67,43 +67,9 @@ export default function Lives() {
       </section>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="bg-red-100">
-          <CardContent className="p-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm">Ao Vivo</p>
-                <p className="text-2xl font-bold">{resumo.aoVivo}</p>
-              </div>
-              <Tv className="text-red-600 w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-blue-100">
-          <CardContent className="p-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm">Agendadas</p>
-                <p className="text-2xl font-bold">{resumo.agendadas}</p>
-              </div>
-              <CalendarClock className="text-blue-600 w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-green-100">
-          <CardContent className="p-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm">Visualizações</p>
-                <p className="text-2xl font-bold">
-                  {resumo.totalViews.toLocaleString()}
-                </p>
-              </div>
-              <Eye className="text-green-600 w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
+        <CardInfo title="Ao Vivo" Icon={Tv} countTotal={resumo.aoVivo} className="text-red-600"  />
+        <CardInfo title="Agendadas" Icon={CalendarClock} countTotal={resumo.agendadas} className="text-blue-600"  bgColor="bg-blue-100"/>
+        <CardInfo title="Visualizações" Icon={Eye} countTotal={resumo.totalViews} className="text-green-600" bgColor="bg-green-100" />
       </div>
 
       <Tabs defaultValue="lives" className="w-full  ">

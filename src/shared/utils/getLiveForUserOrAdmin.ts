@@ -5,7 +5,6 @@ import { useUser } from "@/modules/users/hooks/useUser";
 export const GetLiveForUserOrAdmin = async (user: user | null) => {
   const { handleGetLive, handleGetLiveByUser } = useLive.getState();
   const { getUSerVinculateLive } = useUser.getState();
-  console.log("chamando no dashboardd");
   if (user?.userType === "Admin") {
     const live = await handleGetLive();
 
