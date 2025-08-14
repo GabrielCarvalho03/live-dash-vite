@@ -246,9 +246,9 @@ export default function Dashboard() {
                           <PlayerWithControls
                             src={[
                               {
-                                src: `https://livepeercdn.studio/hls/${"c3977vb2hgd3f6pg"}/index.m3u8`,
+                                src: `https://livepeer.studio/playback/webrtc/e8faplpji5cltsvn`,
                                 height: 300,
-                                mime: "application/mp4",
+                                mime: "video/h264",
                                 type: "webrtc",
                                 width: 900,
                               },
