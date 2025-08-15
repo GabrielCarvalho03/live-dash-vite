@@ -5,6 +5,7 @@ import { api } from "@/lib/axios";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
 import { GetTokenUser } from "@/shared/utils/getTokenUser";
 import { LiveApi } from "@/lib/api/liveApi";
+import { useLive } from "@/modules/live/hooks/useLive";
 
 export const useDashboard = create<useDashboardProps>((set) => ({
   changePasswordIsLoading: false,
@@ -63,21 +64,33 @@ export const useDashboard = create<useDashboardProps>((set) => ({
   setOpenDeleteLiveModal: (value) => set({ openDeleteLiveModal: value }),
   deleteLiveISLoading: false,
   setDeleteLiveISLoading: (value) => set({ deleteLiveISLoading: value }),
-  handleDeleteLive: async (id) => {
+  handleDeleteLive: async ({ id, setActualLive }) => {
     const { setOpenDeleteLiveModal, setDeleteLiveISLoading } =
       useDashboard.getState();
+    const { handleGetLiveByUser, liveList, setLiveList, setLiveListFilter } =
+      useLive.getState();
+    const { user } = useLogin.getState();
     console.log("id", id);
     try {
       setDeleteLiveISLoading(true);
       toast.loading("Encerrando live", {
         id: "TerminateLive",
       });
-      const response = await LiveApi.delete("/live/livepeer-terminate", {
+
+      await LiveApi.delete("/live/livepeer-terminate", {
         data: {
           liveId: id,
         },
       });
+      await handleGetLiveByUser(user?._id);
 
+      const actualLiveIsFinished = liveList.map((item) =>
+        item.steamID === id ? { ...item, status: "finished" } : item
+      );
+      setLiveList(actualLiveIsFinished);
+      setLiveListFilter(actualLiveIsFinished);
+
+      setActualLive(liveList[0]);
       toast.success("Live encerrada com sucesso!", {
         description: "A live foi encerrada, confira na aba de lives.",
       });

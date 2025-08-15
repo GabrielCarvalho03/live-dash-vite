@@ -162,6 +162,7 @@ export const useLive = create<LiveRegisterType>((set) => ({
       const { user } = useLogin.getState();
       const {
         liveList,
+        liveListFilter,
         setLiveList,
         setLiveListFilter,
         setActualSaveSchedule,
@@ -179,11 +180,14 @@ export const useLive = create<LiveRegisterType>((set) => ({
 
       if (LiveIsSchedule) {
         const listDaysLive = data.allSchedules;
-        setTotalLiveSchedule(data.allSchedules.length);
+        setTotalLiveSchedule(listDaysLive.length);
 
-        for (const item of listDaysLive) {
-          const { actualSaveSchedule, liveList, setLiveList } =
-            useLive.getState();
+        let newLives = [...liveList];
+        let newLivesFilter = [...liveListFilter];
+
+        for (let i = 0; i < listDaysLive.length; i++) {
+          const item = listDaysLive[i];
+          const { actualSaveSchedule } = useLive.getState();
           setActualSaveSchedule(actualSaveSchedule + 1);
 
           toast.loading("Criando live", {
@@ -224,14 +228,20 @@ export const useLive = create<LiveRegisterType>((set) => ({
               }
             );
 
-            await LiveApi.post("/live/livepeer-create", {
+            const livePeer = await LiveApi.post("/live/livepeer-create", {
               name: response?.data?.live.title,
               userId: user?._id,
               liveId: response.data.live._id,
             });
 
-            setLiveList([...liveList, response.data.live]);
-            setLiveListFilter([...liveList, response.data.live]);
+            const newLive = {
+              ...response.data.live,
+              streamKey: livePeer.data.livepeer.streamKey,
+              url_play: livePeer.data.livepeer.playbackId,
+              url_RTMP: "rtmp://rtmp.livepeer.com/live",
+            };
+            newLives.push(newLive);
+            newLivesFilter.push(newLive);
           } catch (error: any) {
             console.log("erro", error);
             toast.dismiss("loadingLive");
@@ -240,6 +250,9 @@ export const useLive = create<LiveRegisterType>((set) => ({
             });
           }
         }
+
+        setLiveList(newLives);
+        setLiveListFilter(newLivesFilter);
         toast.dismiss("loadingLive");
         toast.success("Live criada com sucesso");
 
@@ -284,20 +297,37 @@ export const useLive = create<LiveRegisterType>((set) => ({
         },
       });
 
-      await LiveApi.post("/live/livepeer-create", {
+      const livePeer = await LiveApi.post("/live/livepeer-create", {
         name: response?.data?.live.title,
         userId: user?._id,
         liveId: response.data.live._id,
       });
-
+      console.log("oq vem do response", response.data.live);
+      console.log("oq vem do livePeer", livePeer.data);
       toast.dismiss("loadingLive");
       toast.success("Live criada com sucesso");
 
       setActualSaveSchedule(0);
       setTotalLiveSchedule(0);
 
-      setLiveList([...liveList, response.data.live]);
-      setLiveListFilter([...liveList, response.data.live]);
+      setLiveList([
+        ...liveList,
+        {
+          ...response.data.live,
+          streamKey: livePeer.data.livepeer.streamKey,
+          url_play: livePeer.data.livepeer.playbackId,
+          url_RTMP: "rtmp://rtmp.livepeer.com/live",
+        },
+      ]);
+      setLiveListFilter([
+        ...liveListFilter,
+        {
+          ...response.data.live,
+          streamKey: livePeer.data.livepeer.streamKey,
+          url_play: livePeer.data.livepeer.playbackId,
+          url_RTMP: "rtmp://rtmp.livepeer.com/live",
+        },
+      ]);
     } catch (error: any) {
       toast.dismiss("loadingLive");
       toast.error("Erro ao criar live", {

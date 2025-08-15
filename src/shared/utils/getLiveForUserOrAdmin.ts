@@ -8,11 +8,15 @@ export const GetLiveForUserOrAdmin = async (user: user | null) => {
   if (user?.userType === "Admin") {
     const live = await handleGetLive();
 
-    getUSerVinculateLive(live && live[0]);
+    if (live?.length) {
+      getUSerVinculateLive(live && live[0]);
+    }
     return;
   }
   if (user?.userType === "User") {
     const liveByUser = await handleGetLiveByUser(user?._id);
-    await getUSerVinculateLive(liveByUser && liveByUser[0]);
+    if (liveByUser?.length) {
+      await getUSerVinculateLive(liveByUser && liveByUser[0]);
+    }
   }
 };
