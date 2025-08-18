@@ -146,7 +146,6 @@ export const useLive = create<LiveRegisterType>((set) => ({
         setLiveListFilter(listLiveUser);
         return listLiveUser;
       }
-      toast.error("Nenhuma live encontrada");
     } catch (error: any) {
       toast.error("Erro ao buscar live", {
         description: `${error.response.data.error}`,
@@ -531,6 +530,8 @@ export const useLive = create<LiveRegisterType>((set) => ({
           toast.dismiss("updateProduct");
         }
       }
+
+      toast.dismiss("updateProduct");
     } catch (error: any) {
       toast.error("Erro ao atualizar live", {
         description: `${error.response?.data?.error}`,
@@ -541,5 +542,64 @@ export const useLive = create<LiveRegisterType>((set) => ({
     }
 
     return;
+  },
+
+  openStartLiveModal: false,
+  setOpenStartLiveModal: (openStartLiveModal) => set({ openStartLiveModal }),
+  loadingStartLive: false,
+  setLoadingStartLive: (loadingStartLive) => set({ loadingStartLive }),
+  handleStartLive: async (id) => {
+    const {
+      setLoadingStartLive,
+      liveList,
+      setLiveList,
+      setLiveListFilter,
+      setOpenStartLiveModal,
+    } = useLive.getState();
+    const { user } = useLogin.getState();
+    setLoadingStartLive(true);
+
+    const token = GetTokenUser();
+    const existeLiveOn = liveList?.find((item) => item.status === "live");
+
+    if (existeLiveOn && user?.userType !== "Admin") {
+      toast.error("Já existe uma live em andamento", {
+        description:
+          "Por favor, finalize a live atual antes de iniciar uma nova.",
+      });
+      return;
+    }
+
+    try {
+      await LiveApi.put(
+        `/live/${id}`,
+        {
+          status: "live",
+        },
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
+
+      const newListLive = liveList?.map((live) =>
+        live._id === id ? { ...live, status: "live" } : live
+      );
+
+      setLiveList(newListLive);
+      setLiveListFilter(newListLive);
+
+      toast.success("Live iniciada com sucesso", {
+        description: `Para visualizar a live, acesse o dashboard.`,
+      });
+    } catch (error: any) {
+      toast.error("Erro ao iniciar live", {
+        description: `${error.response?.data?.error}`,
+      });
+    } finally {
+      setLoadingStartLive(false);
+      setOpenStartLiveModal(false);
+    }
   },
 }));

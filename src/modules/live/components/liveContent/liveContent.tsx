@@ -1,18 +1,7 @@
 "use client";
 
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import {
-  Filter,
-  Pencil,
-  Play,
-  Trash,
-  ChevronDown,
-  Loader2,
-  Blocks,
-  Link,
-  CirclePlay,
-} from "lucide-react";
+import { Pencil, Play, Trash, Loader2, CirclePlay } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
 import dayjs from "dayjs";
@@ -36,14 +25,17 @@ export default function LiveContent() {
     modalCreateLiveIsOpen,
     liveList,
     liveEdit,
+    loadingStartLive,
+    openStartLiveModal,
+    setOpenStartLiveModal,
     setLiveEdit,
     setModalCreateLiveIsOpen,
     handleGetLive,
+    handleStartLive,
   } = useLive();
-  const { allVinculationProducts, handleGetAllVinculationProduct } =
-    useVinculationProductsLive();
+  const { allVinculationProducts } = useVinculationProductsLive();
 
-  const { user, setUser, handleGetUserById } = useLogin();
+  const { user } = useLogin();
   const {
     openVinculationProductModal,
     openDeleteLiveModal,
@@ -51,7 +43,6 @@ export default function LiveContent() {
     loadingDeleteLive,
     loadingLiveList,
     liveListFilter,
-    setLoadingLiveList,
     setOpenDeleteLiveModal,
     setLiveEditObject,
     setOpenVinculationProductModal,
@@ -202,7 +193,10 @@ export default function LiveContent() {
                             </Button>
                             {live.status === "scheduled" && (
                               <Button
-                                onClick={() => {}}
+                                onClick={() => {
+                                  setLiveEditObject(live);
+                                  setOpenStartLiveModal(true);
+                                }}
                                 size="icon"
                                 variant="ghost"
                               >
@@ -269,10 +263,10 @@ export default function LiveContent() {
         title="Tem certeza que deseja iniciar uma live?"
         description="Se estiver no horário marcado, ignore esta mensagem."
         actionButtonText="Iniciar Live"
-        isOpen={false}
-        loading={false}
-        onClose={() => {}}
-        onConfirm={() => {}}
+        isOpen={openStartLiveModal}
+        loading={loadingStartLive}
+        onClose={() => setOpenStartLiveModal(false)}
+        onConfirm={() => handleStartLive(liveEditObject._id ?? "")}
       />
     </div>
   );

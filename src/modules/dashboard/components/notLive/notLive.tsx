@@ -1,9 +1,11 @@
+import { useLive } from "@/modules/live/hooks/useLive";
 import { Button } from "@/shared/components/ui/button";
 import { InboxIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export const NotLive = () => {
   const navigate = useNavigate();
+  const { liveList, setLiveListFilter } = useLive.getState();
   return (
     <main className="w-full flex flex-col justify-center items-center">
       <InboxIcon width={"50px"} height={50} color="#c1c1c1" />
@@ -17,7 +19,10 @@ export const NotLive = () => {
       <Button
         variant={"outline"}
         className="mt-5 hover:bg-blue-500 hover:text-white"
-        onClick={() => navigate("/dashboard/live")}
+        onClick={() => {
+          setLiveListFilter(liveList);
+          navigate("/dashboard/live");
+        }}
       >
         Iniciar Live
       </Button>

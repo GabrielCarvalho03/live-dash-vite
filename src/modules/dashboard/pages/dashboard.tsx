@@ -291,7 +291,9 @@ export default function Dashboard() {
                         </div>
 
                         <div className="w-[0.5px] bg-gray-300 max-h-[400px] min-h-[280px]" />
-                        <ChatComponent />
+                        <ChatComponent
+                          liveId={actualLive?._id ?? livesAtivas[0]?._id}
+                        />
                       </section>
                     </>
                   )}
