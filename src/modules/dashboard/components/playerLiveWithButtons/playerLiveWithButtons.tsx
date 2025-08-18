@@ -24,18 +24,13 @@ export function PlayerWithControls(props: { src: Src[] | null }) {
     return (
       <PlayerLoading
         title="Invalid source"
-        description="We could not fetch valid playback information for the playback ID you provided. Please check and try again."
+        description="We could not fetch valid playback information for the playback ID you  provided. Please check and try again."
       />
     );
   }
 
   return (
-    <Player.Root
-      playbackId="e8faplpji5cltsvn"
-      src={props.src}
-      autoPlay
-      lowLatency
-    >
+    <Player.Root src={props.src} autoPlay lowLatency>
       <Player.Container className="h-full w-full overflow-hidden rounded-lg bg-black outline-none transition">
         <Player.Video
           title="Live stream"

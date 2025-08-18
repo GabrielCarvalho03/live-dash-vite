@@ -5,6 +5,7 @@ import { api } from "@/lib/axios";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
 import { GetTokenUser } from "@/shared/utils/getTokenUser";
 import { LiveApi } from "@/lib/api/liveApi";
+import { useLive } from "@/modules/live/hooks/useLive";
 
 export const useDashboard = create<useDashboardProps>((set) => ({
   changePasswordIsLoading: false,
@@ -63,21 +64,47 @@ export const useDashboard = create<useDashboardProps>((set) => ({
   setOpenDeleteLiveModal: (value) => set({ openDeleteLiveModal: value }),
   deleteLiveISLoading: false,
   setDeleteLiveISLoading: (value) => set({ deleteLiveISLoading: value }),
-  handleDeleteLive: async (id) => {
+  handleDeleteLive: async ({ id, setActualLive }) => {
     const { setOpenDeleteLiveModal, setDeleteLiveISLoading } =
       useDashboard.getState();
-    console.log("id", id);
+    const { handleGetLiveByUser, setLiveList, setLiveListFilter } =
+      useLive.getState();
+    const { liveList } = useLive.getState();
+    const token = GetTokenUser();
     try {
       setDeleteLiveISLoading(true);
       toast.loading("Encerrando live", {
         id: "TerminateLive",
       });
-      const response = await LiveApi.delete("/live/livepeer-terminate", {
+
+      const actualLive = liveList?.find((item) => item.steamID === id);
+
+      await LiveApi.delete("/live/livepeer-terminate", {
         data: {
           liveId: id,
         },
       });
 
+      await LiveApi.put(
+        `/live/finished/${actualLive?._id}`,
+        {},
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
+      const actualLiveIsFinished = liveList.map((item) =>
+        item.steamID === id ? { ...item, status: "finished" } : item
+      );
+      setLiveList(actualLiveIsFinished);
+      setLiveListFilter(actualLiveIsFinished);
+
+      const liveListNow = actualLiveIsFinished?.filter(
+        (item) => item.status === "live"
+      );
+
+      setActualLive(liveListNow[0]);
       toast.success("Live encerrada com sucesso!", {
         description: "A live foi encerrada, confira na aba de lives.",
       });

@@ -89,6 +89,12 @@ export interface LiveRegisterType {
   loadingUpdateLive: boolean;
   setLoadingUpdateLive: (value: boolean) => void;
   handleUpdateLive: (data: LiveCreateSchemaData) => Promise<void>;
+
+  openStartLiveModal: boolean;
+  setOpenStartLiveModal: (value: boolean) => void;
+  loadingStartLive: boolean;
+  setLoadingStartLive: (value: boolean) => void;
+  handleStartLive: (id: string) => Promise<void>;
 }
 
 export interface VinculationProduct {

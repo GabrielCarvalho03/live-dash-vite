@@ -268,12 +268,15 @@ export const useUser = create<RegisterType>((set) => ({
     const { setUserVinculateLive } = useUser.getState();
     try {
       const token = GetTokenUser();
-      const userVinculateLive = await api.get(`/users/${actualLive?.userId}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `${token}`,
-        },
-      });
+      const userVinculateLive = await api.get(
+        `/users/${actualLive?.userId ?? "64dbe7f2c2a4b8e1a1b2c3d4"}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `${token}`,
+          },
+        }
+      );
       console.log("userVinculateLive", userVinculateLive);
       if (userVinculateLive) {
         setUserVinculateLive(userVinculateLive.data.data);

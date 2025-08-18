@@ -92,6 +92,8 @@ export default function Dashboard() {
 
   const livesAgendadas = liveList?.filter((item) => item.status == "scheduled");
 
+  console.log("actualLive", liveList);
+
   return (
     <div className="min-h-screen overflow-y-hidden mb-5">
       <>
@@ -244,12 +246,16 @@ export default function Dashboard() {
                       <section className="flex w-full gap-4">
                         <div className="w-6/12 ">
                           <PlayerWithControls
+                            key={actualLive?._id ?? livesAtivas[0]?._id}
                             src={[
                               {
-                                src: `https://livepeer.studio/playback/webrtc/e8faplpji5cltsvn`,
+                                src: `https://livepeercdn.studio/hls/${
+                                  actualLive?.url_play ??
+                                  livesAtivas[0]?.url_play
+                                }/index.m3u8`,
                                 height: 300,
-                                mime: "video/h264",
-                                type: "webrtc",
+                                mime: "application/mp4",
+                                type: "hls",
                                 width: 900,
                               },
                             ]}
@@ -285,7 +291,9 @@ export default function Dashboard() {
                         </div>
 
                         <div className="w-[0.5px] bg-gray-300 max-h-[400px] min-h-[280px]" />
-                        <ChatComponent />
+                        <ChatComponent
+                          liveId={actualLive?._id ?? livesAtivas[0]?._id}
+                        />
                       </section>
                     </>
                   )}
@@ -363,7 +371,10 @@ export default function Dashboard() {
         isOpen={openDeleteLiveModal}
         onClose={() => setOpenDeleteLiveModal(false)}
         onDelete={() =>
-          handleDeleteLive(actualLive?.steamID ?? livesAtivas[0]?.steamID)
+          handleDeleteLive({
+            id: actualLive?.steamID ?? livesAtivas[0]?.steamID,
+            setActualLive,
+          })
         }
         loading={deleteLiveISLoading}
       />
