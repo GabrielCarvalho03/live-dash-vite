@@ -22,15 +22,16 @@ export const ChatComponent = ({ liveId }: ChatComponentProps) => {
   const { user } = useLogin();
   const { liveList } = useLive();
 
+  console.log("liveId:", liveId);
   const actualLive = liveList?.find((live) => live._id === liveId);
 
   useEffect(() => {
-    const chatRef = ref(db, `chat/${liveId}`);
+    setAllMessages([]);
+
+    const chatRef = ref(db, `live_chat`);
     const unsubscribe = onValue(chatRef, (snapshot) => {
       const data = snapshot.val();
-      console.log("chat", data);
       if (data) {
-        // Converte o objeto em array de mensagens
         const messagesArray = Object.entries(data).map(([id, value]: any) => ({
           id,
           ...value,
@@ -45,7 +46,7 @@ export const ChatComponent = ({ liveId }: ChatComponentProps) => {
       off(chatRef);
       unsubscribe();
     };
-  }, []);
+  }, [liveId]);
 
   useEffect(() => {
     if (endOfMessagesRef.current) {
@@ -55,40 +56,41 @@ export const ChatComponent = ({ liveId }: ChatComponentProps) => {
 
   const handleSendMessage = async () => {
     if (!messageText.trim()) return;
-    const chatRef = ref(db, `chat/${liveId}`);
+    const chatRef = ref(db, `live_chat`);
     setMessageText("");
 
     await push(chatRef, {
-      userName: user?.name,
+      id: new Date().getTime(),
+      user: user?.name,
       avatar: user?.avatar,
-      message: messageText,
+      text: messageText,
       admin: user?.userType === "Admin" ? true : false,
-      Creator: user?._id === actualLive?.userId ? true : false,
+      creator: user?._id === actualLive?.userId ? true : false,
       time: new Date().toISOString(),
     });
   };
 
   return (
-    <main className="w-6/12 h-full ">
-      <div className="w-full  max-h-[270px] min-h-[270px] overflow-y-auto">
+    <main className="w-6/12 h-full max-h-[400px] flex flex-col">
+      <div className="w-full flex-1 min-h-[270px] max-h-[270px] overflow-y-auto">
         <span className="font-semibold text-lg ">Chat da live</span>
 
         <div className="w-full mt-10 flex flex-col gap-7">
           {allMessages?.map((item: any) => (
-            <div>
+            <div key={item.id}>
               <div className="w-full flex gap-1">
                 <Avatar className="w-5 h-5">
                   <AvatarImage src={item.avatar} alt="@shadcn" />
                   <AvatarFallback className="text-xs">A</AvatarFallback>
                 </Avatar>
                 <span className="text-xs font-semibold ">
-                  {item.userName}{" "}
+                  {item.user}{" "}
                   {item.admin ? (
                     <span className="px-[4px] py-1   text-red-500 rounded-full text-[10px]">
                       {""}
                       Admin
                     </span>
-                  ) : item.Creator ? (
+                  ) : item.creator ? (
                     <span className="px-[4px] py-1 -pt-[30px]  text-blue-500 rounded-full text-[10px]">
                       {" "}
                       Criador
@@ -98,7 +100,7 @@ export const ChatComponent = ({ liveId }: ChatComponentProps) => {
                   )}
                 </span>
               </div>
-              <p className="text-xs text-gray-600">{item.message}</p>
+              <p className="text-xs text-gray-600">{item.text}</p>
             </div>
           ))}
           <div ref={endOfMessagesRef} />

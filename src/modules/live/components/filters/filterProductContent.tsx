@@ -7,29 +7,32 @@ import {
   SelectItem,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { Calender } from "../calendar/calendar";
 import { Input } from "@/shared/components/ui/input";
-import { Filter } from "lucide-react";
-import { useFilterLive } from "../../hooks/usefilterLive";
+import { Filter, Plus } from "lucide-react";
 import { useLive } from "../../hooks/useLive";
 import { useFilterProduct } from "../../hooks/usefilterProduct";
+import { useCreateProductsDrawer } from "@/shared/hooks/useCreateProductsDrawer/useCreateProductsDrawer";
+import { CreateProductsDrawer } from "@/shared/components/drawers/CreateProducts.drawer";
 
 export const FilterProductContent = () => {
   const {
     searchProduct,
-    statusFilterProduct,
     LiveVinculateFilter,
     setLiveVinculateFilter,
     setSearchProduct,
-    setStatusFilterProduct,
     applyFilters,
     clearFilter,
   } = useFilterProduct();
+  const {
+    openModalCreateProducts,
+    loadingCreateProducts,
+    setOpenModalCreateProducts,
+  } = useCreateProductsDrawer();
   const { liveList } = useLive();
 
   return (
-    <>
-      <div className="flex items-center gap-4 mt-4 flex-wrap">
+    <main className="w-full flex justify-between items-center ">
+      <div className="w-7/12 flex items-center gap-4 mt-4 flex-wrap">
         <Input
           onChange={(e: ChangeEvent<HTMLInputElement>) => {
             setSearchProduct(e?.target?.value);
@@ -72,6 +75,21 @@ export const FilterProductContent = () => {
           Limpar filtros
         </Button>
       </div>
-    </>
+      <div className="w-5/12 flex items-center justify-end gap-4 mt-4 flex-wrap">
+        <Button
+          variant="outline"
+          className="hover:bg-blue-500 hover:text-white "
+          onClick={() => setOpenModalCreateProducts(true)}
+        >
+          <Plus className="w-4 h-4 mr-2" /> Nova Live
+        </Button>
+      </div>
+
+      <CreateProductsDrawer
+        loading={loadingCreateProducts}
+        isOpen={openModalCreateProducts}
+        onClose={() => setOpenModalCreateProducts(false)}
+      />
+    </main>
   );
 };
