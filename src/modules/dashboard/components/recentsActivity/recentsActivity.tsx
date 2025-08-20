@@ -8,26 +8,11 @@ import { Clock, Tv } from "lucide-react";
 export const RecentsActivity = () => {
   const { liveList } = useLive();
 
-  const atividades = [
-    {
-      id: 1,
-      titulo: "Live Tutorial OBS",
-      data: "25/01/2024 às 14:00",
-      status: "Finalizada",
-    },
-    {
-      id: 2,
-      titulo: "Live ReactJS Avançado",
-      data: "01/07/2025 às 18:00",
-      status: "Ao Vivo",
-    },
-    {
-      id: 3,
-      titulo: "Live de Setup",
-      data: "05/07/2025 às 20:00",
-      status: "Agendada",
-    },
-  ];
+  const sortedLiveList = liveList
+    ?.slice()
+    .sort((a, b) => (a._id < b._id ? 1 : -1))
+    .slice(0, 3);
+
   return (
     <Card className="shadow-sm">
       <CardContent className="p-4 space-y-4">
@@ -36,7 +21,7 @@ export const RecentsActivity = () => {
           Atividade Recente
         </Label>
 
-        {liveList?.map((item) => (
+        {sortedLiveList?.map((item) => (
           <div
             key={item._id}
             className="flex items-center justify-between border rounded-md p-3"
@@ -49,7 +34,8 @@ export const RecentsActivity = () => {
               <div className="flex flex-col">
                 <span className="font-semibold text-sm">{item?.title}</span>
                 <span className="text-xs text-muted-foreground">
-                  {dayjs(item?.dayLive.date).format("DD/MM/YYYY [às] HH:mm")}
+                  {dayjs(item?.dayLive?.date).format("DD/MM/YYYY ")} às{" "}
+                  {item?.dayLive?.hour}
                 </span>
               </div>
             </div>

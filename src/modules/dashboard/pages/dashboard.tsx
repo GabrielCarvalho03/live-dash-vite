@@ -1,11 +1,26 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Tv, Clock, Eye, BarChart2, Users, CircleStop } from "lucide-react";
+import {
+  Tv,
+  Clock,
+  Eye,
+  Users,
+  CircleStop,
+  Trash2,
+  Calendar,
+  Clock2,
+} from "lucide-react";
 import { Separator } from "@radix-ui/react-separator";
 import { Label } from "@radix-ui/react-label";
 import { Badge } from "@/shared/components/ui/badge";
-import { Card, CardContent } from "@/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 
 import { Button } from "@/shared/components/ui/button";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
@@ -34,7 +49,28 @@ import { ChatComponent } from "../components/chatComponent/chatComponent";
 import { useUser } from "@/modules/users/hooks/useUser";
 import { DeleteConfirmModal } from "@/shared/components/deleteConfirmModal/deleteConfirmModal";
 import { CardComponent } from "../components/card/card";
-import { RecentsActivity } from "../components/recentsActivity/recentsActivity";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { SortableItem } from "@/modules/live/components/EditProductInLiveModal/SortableItem";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { CreateProductsDrawer } from "@/shared/components/drawers/CreateProducts.drawer";
+import { useCreateProductsDrawer } from "@/shared/hooks/useCreateProductsDrawer/useCreateProductsDrawer";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { db } from "@/lib/firebase";
+import { off, onValue, ref, set } from "firebase/database";
+import { toast } from "sonner";
+import { NotProductsInHighlight } from "../components/notProductsInHighlight/notProductsInHighlight";
 
 function LiveIndicator() {
   return (
@@ -55,22 +91,107 @@ export default function Dashboard() {
   const { user, setUser, handleGetUserById, loginisLoading } = useLogin();
   const { liveList, loadingLiveList } = useLive();
   const {
+    openModalCreateProducts,
+    highlightedProductList,
+    productObjForDeleteOrEdit,
+    openModalConfirmDeleteProductInLive,
+    loadingDeleteProduct,
+    loadingCreateProducts,
+    setOpenModalConfirmDeleteProductInLive,
+    setHighlightedProductList,
+    setOpenModalCreateProducts,
+    handleDeleteProduct,
+    setProductObjForDeleteOrEdit,
+  } = useCreateProductsDrawer();
+
+  const {
     ChangePasswordFristAcessModal,
     openDeleteLiveModal,
     deleteLiveISLoading,
     setOpenDeleteLiveModal,
     handleDeleteLive,
   } = useDashboard();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
   const [actualLive, setActualLive] = useState<liveObject | undefined>(
     {} as liveObject
   );
   const { userVinculateLive, getUSerVinculateLive } = useUser();
+  const livesAtivas = liveList?.filter((item) => item.status == "live");
 
   useEffect(() => {
     if (!user?._id) {
       getUser();
     }
   }, []);
+
+  useEffect(() => {
+    const liveId = actualLive?._id ?? livesAtivas[0]?._id;
+    if (!liveId) return;
+
+    const productsRef = ref(db, `products/${liveId}`);
+
+    const unsubscribe = onValue(productsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        let productsArray = [];
+        if (Array.isArray(data.products)) {
+          productsArray = data.products;
+        } else if (typeof data.products === "object") {
+          productsArray = Object.values(data.products);
+        } else if (Array.isArray(data)) {
+          productsArray = data;
+        } else if (typeof data === "object") {
+          productsArray = Object.values(data);
+        }
+        setHighlightedProductList(productsArray);
+      } else {
+        setHighlightedProductList([]);
+      }
+    });
+
+    return () => {
+      off(productsRef);
+      unsubscribe();
+    };
+  }, [actualLive?._id, livesAtivas[0]?._id]);
+
+  const handleDragEnd = async (event: any) => {
+    const productsRef = ref(
+      db,
+      `products/${actualLive?._id ?? livesAtivas[0]?._id}`
+    );
+
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = highlightedProductList.findIndex(
+      (item) => item._id === active.id
+    );
+    const newIndex = highlightedProductList.findIndex(
+      (item) => item._id === over.id
+    );
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const newList = [...highlightedProductList];
+      const [moved] = newList.splice(oldIndex, 1);
+      newList.splice(newIndex, 0, moved);
+      setHighlightedProductList(newList);
+
+      await set(productsRef, {
+        products: newList,
+      });
+
+      toast.success("Ordem dos produtos atualizada com sucesso!", {
+        duration: 3000,
+      });
+    }
+  };
 
   const hasFetchedLives = useRef(false);
 
@@ -88,11 +209,12 @@ export default function Dashboard() {
     setUser(user);
   };
 
-  const livesAtivas = liveList?.filter((item) => item.status == "live");
-
   const livesAgendadas = liveList?.filter((item) => item.status == "scheduled");
-
-  console.log("actualLive", liveList);
+  const NextLive = livesAgendadas?.sort((a, b) => {
+    const aDate = dayjs(a.dayLive?.date).valueOf();
+    const bDate = dayjs(b.dayLive?.date).valueOf();
+    return aDate - bDate;
+  });
 
   return (
     <div className="min-h-screen overflow-y-hidden mb-5">
@@ -300,42 +422,166 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="flex-1 shadow-sm max-h-[200px]">
-                <CardContent className="p-4 space-y-4">
-                  <Label className="text-lg font-semibold">
-                    Próximas Lives
+              <Card className="flex-1 shadow-sm max-h-[520px]">
+                <CardContent className="p-4 space-y-4  ">
+                  <Label className="text-sm font-normal  text-purple-700 bg-purple-100 px-2 py-1 rounded">
+                    Em destaque
                   </Label>
-
-                  {livesAgendadas.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      Nenhuma live agendada.
-                    </p>
+                </CardContent>
+                <CardContent className="p-4 space-y-4 max-h-[380px] min-h-[380px] overflow-y-auto">
+                  {highlightedProductList.length === 0 && (
+                    <NotProductsInHighlight />
                   )}
 
-                  {livesAgendadas.map((live) => (
-                    <div
-                      key={live?._id}
-                      className="flex justify-between items-center border rounded p-4"
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={
+                        highlightedProductList?.map((item) => item._id) || []
+                      }
+                      strategy={verticalListSortingStrategy}
                     >
-                      <div>
-                        <h3 className="font-semibold">{live.title}</h3>
-                        <p className="text-xs text-muted-foreground max-w-sm">
-                          {live.description}
-                        </p>
-                        <p className="text-xs mt-1 text-muted-foreground">
-                          {live?.dayLive?.date} -{" "}
-                          <span className="capitalize">{live.category}</span>
-                        </p>
-                      </div>
+                      {highlightedProductList?.map((item, index) => (
+                        <SortableItem key={item._id} id={item._id}>
+                          {({ setNodeRef, style, listeners, attributes }) => (
+                            <div ref={setNodeRef} style={style}>
+                              <div
+                                key={item._id}
+                                className="flex items-center justify-between border rounded-md p-3"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span
+                                    {...listeners}
+                                    {...attributes}
+                                    className="cursor-grab text-gray-500 ml-2"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    ⠿
+                                  </span>
+                                  <div className="">
+                                    <img
+                                      src={item.imageMain}
+                                      className="w-10 rounded-lg"
+                                    />
+                                  </div>
 
-                      {/* <Button size="sm">Iniciar</Button> */}
-                    </div>
-                  ))}
+                                  <div className="flex flex-col">
+                                    <span className="font-semibold text-sm">
+                                      {item.name}
+                                    </span>
+                                    {/* <span className="text-xs text-muted-foreground">
+                                      {item.}
+                                    </span> */}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-5">
+                                  <span className="font-semibold text-lg">
+                                    {item.price}
+                                  </span>
+
+                                  <Button
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setOpenModalConfirmDeleteProductInLive(
+                                        true
+                                      );
+                                      setProductObjForDeleteOrEdit(item);
+                                    }}
+                                  >
+                                    <Trash2 className="text-red-500 w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </SortableItem>
+                      ))}
+                    </SortableContext>
+                  </DndContext>
                 </CardContent>
+                {highlightedProductList.length > 0 && (
+                  <CardFooter className="pt-5 border-t-[0.5px]">
+                    <section className="w-full flex justify-between items-center">
+                      <div className="w-6/12"></div>
+
+                      <div className="w-6/12 flex justify-end items-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="hover:bg-blue-500 hover:text-white"
+                          onClick={() => {
+                            setOpenModalCreateProducts(true);
+                          }}
+                        >
+                          Adicionar Produtos
+                        </Button>
+                      </div>
+                    </section>
+                  </CardFooter>
+                )}
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+            <Card className="shadow-sm w-full  mt-10 min-h-[300px]">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">
+                  Próxima Live
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent className="w-full px-10 0">
+                {NextLive?.map((item, index) => {
+                  return (
+                    <div key={item._id} className="flex flex-col">
+                      <div
+                        key={item._id}
+                        className="flex items-center justify-between border-b rounded-md p-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+
+                              <span className="font-semibold text-base ">
+                                {item.title}
+                              </span>
+                            </div>
+
+                            <div className="fex gap-5">
+                              <span className="font-normal text-gray-400 text-sm">
+                                {format(item.dayLive.date, "d 'de' MMM yyyy", {
+                                  locale: ptBR,
+                                })}
+                              </span>
+                            </div>
+                            {/* <span className="text-xs text-muted-foreground">
+                                      {item.}
+                                    </span> */}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-5">
+                          <Badge className="bg-blue-950   ">
+                            {/*  */}
+
+                            <span className="pr-3">
+                              <Clock2 className="w-4 h-4" />
+                            </span>
+
+                            <span className="">{"Agendada"}</span>
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+
+            {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
               <RecentsActivity />
 
               <Card className="shadow-sm">
@@ -360,7 +606,7 @@ export default function Dashboard() {
                   </ul>
                 </CardContent>
               </Card>
-            </div>
+            </div> */}
           </>
         )}
       </>
@@ -377,6 +623,27 @@ export default function Dashboard() {
           })
         }
         loading={deleteLiveISLoading}
+      />
+      <DeleteConfirmModal
+        title="Tem certeza que deseja apagar ? "
+        description="Essa ação não pode ser desfeita."
+        actionButtonText="Apagar"
+        isOpen={openModalConfirmDeleteProductInLive}
+        onClose={() => setOpenModalConfirmDeleteProductInLive(false)}
+        onDelete={() =>
+          handleDeleteProduct({
+            liveId: actualLive?._id ?? livesAtivas[0]?._id,
+            productId: productObjForDeleteOrEdit?._id ?? "",
+          })
+        }
+        loading={loadingDeleteProduct}
+      />
+
+      <CreateProductsDrawer
+        liveId={actualLive?._id ?? livesAtivas[0]?._id}
+        isOpen={openModalCreateProducts}
+        onClose={() => setOpenModalCreateProducts(false)}
+        loading={loadingCreateProducts}
       />
     </div>
   );

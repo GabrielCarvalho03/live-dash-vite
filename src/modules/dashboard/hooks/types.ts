@@ -10,6 +10,12 @@ type handleDeleteLiveProps = {
   setActualLive: React.Dispatch<React.SetStateAction<liveObject | undefined>>;
 };
 
+type sendMessageProps = {
+  messageText: string;
+  setMessageText: React.Dispatch<React.SetStateAction<string>>;
+  liveId: string;
+};
+
 export interface useDashboardProps {
   changePasswordIsLoading: boolean;
   setChangePasswordIsLoading: (value: boolean) => void;
@@ -30,4 +36,14 @@ export interface useDashboardProps {
     id,
     setActualLive,
   }: handleDeleteLiveProps) => Promise<void>;
+}
+
+export interface useChatProps {
+  allMessages: any[];
+  setAllMessages: React.Dispatch<React.SetStateAction<any[]>>;
+  handleSendMessage: ({
+    messageText,
+    liveId,
+    setMessageText,
+  }: sendMessageProps) => Promise<void>;
 }

@@ -19,3 +19,20 @@ const db = getDatabase(app);
 const analytics = getAnalytics(app);
 
 export { app, db, analytics };
+
+// import { initializeApp } from "firebase/app";
+// import { getDatabase } from "firebase/database";
+
+// const firebaseConfig = {
+//   apiKey: "AIzaSyAJf9AgXRLsBhiK_vlxEG8J6NDHLFb8Qb8",
+//   authDomain: "financas-bfc03.firebaseapp.com",
+//   databaseURL: "https://financas-bfc03-default-rtdb.firebaseio.com",
+//   projectId: "financas-bfc03",
+//   storageBucket: "financas-bfc03.appspot.com",
+//   messagingSenderId: "450595661980",
+//   appId: "1:450595661980:web:dfd9613010bed3adbd6559",
+//   measurementId: "G-B8EDLP3DF7",
+// };
+
+// const app = initializeApp(firebaseConfig);
+// export const db = getDatabase(app);

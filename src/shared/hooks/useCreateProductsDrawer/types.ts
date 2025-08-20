@@ -1,0 +1,64 @@
+import { CreateProductFormSchemaData } from "./createProductsSchema";
+
+export type productObject = {
+  _id: string;
+  name: string;
+  link: string;
+  imageMain: string;
+  imagesSecondary: string[];
+  price: string;
+  description: string;
+  stock: string;
+};
+
+export type handleCreateProductsProps = {
+  liveId: string;
+  newProduct: productObject;
+};
+
+export type handleDeleteProductProps = {
+  productId: string;
+  liveId: string;
+};
+
+export interface CreateProductFormProps {
+  loadingCreateProducts: boolean;
+  setLoadingCreateProducts: (loading: boolean) => void;
+  searchProductsIsLoading: boolean;
+  setSearchProductsIsLoading: (loading: boolean) => void;
+
+  openModalCreateProducts: boolean;
+  setOpenModalCreateProducts: (openModalCreateProducts: boolean) => void;
+  handleCreateProducts: ({
+    liveId,
+    newProduct,
+  }: handleCreateProductsProps) => Promise<void>;
+
+  loadingDeleteProduct: boolean;
+  setLoadingDeleteProduct: (loading: boolean) => void;
+  handleDeleteProduct: ({
+    productId,
+    liveId,
+  }: handleDeleteProductProps) => Promise<void>;
+
+  highlightedProductList: productObject[];
+  setHighlightedProductList: (highlightedProductList: productObject[]) => void;
+  handleGetProductById: (id: string) => Promise<void>;
+
+  openModalConfirmDeleteProductInLive: boolean;
+  setOpenModalConfirmDeleteProductInLive: (
+    openModalConfirmDeleteProductInLive: boolean
+  ) => void;
+
+  productObjForDeleteOrEdit: productObject | null;
+  setProductObjForDeleteOrEdit: (
+    productObjForDeleteOrEdit: productObject | null
+  ) => void;
+
+  productObject: productObject | null;
+  setProductObject: (productObject: productObject | null) => void;
+
+  productId: string | null;
+  setProductId: (productId: string | null) => void;
+  getIdByLink: (link: string) => Promise<string | null>;
+}
