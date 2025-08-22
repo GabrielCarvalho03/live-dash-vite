@@ -15,10 +15,10 @@ export function useHandleProductDragEnd(
     if (!over || active.id === over.id) return;
 
     const oldIndex = highlightedProductList.findIndex(
-      (item) => item._id === active.id
+      (item) => item.id === active.id
     );
     const newIndex = highlightedProductList.findIndex(
-      (item) => item._id === over.id
+      (item) => item.id === over.id
     );
 
     if (oldIndex !== -1 && newIndex !== -1) {

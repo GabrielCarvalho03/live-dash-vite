@@ -67,7 +67,7 @@ export const useVinculationProductsLive = create<VinculationProduct>((set) => ({
       setLoadingVinculationProduct(true);
 
       const dataToSave = {
-        _id: data._id,
+        _id: data.id,
         name: data.name,
         link: data.link,
         hourStart: data.hourStart,
@@ -106,7 +106,7 @@ export const useVinculationProductsLive = create<VinculationProduct>((set) => ({
       });
     } catch (error: any) {
       toast.error("Erro ao vincular produto", {
-        description: `${error.response.data.error}`,
+        description: `${error.response.data.message}`,
       });
     } finally {
       setLoadingVinculationProduct(false);

@@ -122,7 +122,7 @@ export default function Dashboard() {
         onDelete={() =>
           handleDeleteProduct({
             liveId: liveId,
-            productId: productObjForDeleteOrEdit?._id ?? "",
+            productId: productObjForDeleteOrEdit?.id ?? "",
           })
         }
         loading={loadingDeleteProduct}
