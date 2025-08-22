@@ -59,7 +59,7 @@ export const ChatComponent = ({ liveId }: ChatComponentProps) => {
     setMessageText("");
 
     await push(chatRef, {
-      id: new Date().getTime(),
+      userId: user?._id,
       user: user?.name,
       avatar: user?.avatar,
       text: messageText,

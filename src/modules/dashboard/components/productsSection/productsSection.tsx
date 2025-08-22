@@ -23,6 +23,9 @@ import { Button } from "@/shared/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useHandleProductDragEnd } from "../../hooks/realtime/useHandleProductDragEnd";
 import { useDashboard } from "../../hooks/useDashboard";
+import { formatImageUrl } from "@/shared/utils/FormtImageUrl";
+import { formatPrice } from "@/shared/utils/formatPrice";
+import { toast } from "sonner";
 
 export const ProductsSection = () => {
   const {
@@ -66,15 +69,15 @@ export const ProductsSection = () => {
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={highlightedProductList?.map((item) => item._id) || []}
+            items={highlightedProductList?.map((item) => item.id) || []}
             strategy={verticalListSortingStrategy}
           >
             {highlightedProductList?.map((item, index) => (
-              <SortableItem key={item._id} id={item._id}>
+              <SortableItem key={item.id} id={item.id}>
                 {({ setNodeRef, style, listeners, attributes }) => (
                   <div ref={setNodeRef} style={style}>
                     <div
-                      key={item._id}
+                      key={item.id}
                       className="flex items-center justify-between border rounded-md p-3"
                     >
                       <div className="flex items-center gap-3">
@@ -88,7 +91,9 @@ export const ProductsSection = () => {
                         </span>
                         <div className="">
                           <img
-                            src={item.imageMain}
+                            src={`https://sampa.buscabusca.com.br/image/${formatImageUrl(
+                              item?.imageMain ?? ""
+                            )}`}
                             className="w-10 rounded-lg"
                           />
                         </div>
@@ -102,7 +107,7 @@ export const ProductsSection = () => {
 
                       <div className="flex items-center gap-5">
                         <span className="font-semibold text-lg">
-                          {item.price}
+                          {formatPrice(Number(item.price))}
                         </span>
 
                         <Button

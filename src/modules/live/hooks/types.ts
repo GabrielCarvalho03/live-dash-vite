@@ -103,14 +103,18 @@ export interface VinculationProduct {
 
   handleAddVinculationProduct: (
     data: VinculationProductsLiveSchemaData & {
-      _id: string;
+      id: string;
       name: string;
       link: string;
       hourStart: string;
       hourEnd: string;
       price: string;
       imageMain: string;
-      imagesSecondary: string[];
+      imagesSecondary: [
+        {
+          image: string;
+        }
+      ];
       liveId: string;
       userId: string;
     }

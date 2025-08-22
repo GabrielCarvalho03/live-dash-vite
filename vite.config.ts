@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 4002,
+    allowedHosts: ["311d86c4e50f.ngrok-free.app"],
   },
   resolve: {
     alias: {

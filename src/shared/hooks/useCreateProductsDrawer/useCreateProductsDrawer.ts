@@ -6,7 +6,7 @@ import { ref, set as setdb } from "firebase/database";
 import { db } from "@/lib/firebase";
 import { useVinculationProductsLive } from "@/modules/live/hooks/useVinculationProducts";
 import { useLogin } from "@/modules/auth/hooks/useLoginHook/useLogin";
-import { api } from "@/lib/axios";
+
 import axios from "axios";
 
 export const useCreateProductsDrawer = create<CreateProductFormProps>(
@@ -29,7 +29,7 @@ export const useCreateProductsDrawer = create<CreateProductFormProps>(
     productId: null,
     setProductId: (productId) => set({ productId }),
 
-    getIdByLink: async (link) => {
+    getIdByLink: (link) => {
       const { setProductId } = useCreateProductsDrawer.getState();
       const match = link.match(/product_id=(\d+)/);
       const productId = match ? match[1] : null;
@@ -48,7 +48,7 @@ export const useCreateProductsDrawer = create<CreateProductFormProps>(
       try {
         setSearchProductsIsLoading(true);
         const res = await axios.post(
-          `https://livemanager.buscabusca.com.br/service/apirest`,
+          "https://livemanager.buscabusca.com.br/service/apirest",
           {
             method: "ProductServiceRest",
             action: "List",
@@ -57,16 +57,25 @@ export const useCreateProductsDrawer = create<CreateProductFormProps>(
           },
           {
             headers: {
-              Authorization: `Bearer ${"11dcf3e778f4a16f4c9653d136cacf4062a6608cb642f1ab8f8d0d3a876c3430bb2396e947c6b7346392603d9348c18b6b9971ab77d7ebbc0789649aba50a42ba7348a641e6fb7ca3bd59b2ba88dca318258559e576bf0d66ade5c36cd3c423e1f0dad3dca1671ad0192165ee4ee50ae6addc28e439ec95ba16be08f2d1df095d71a0b816690cfec0b3bf8bdd890e4787c7f426cd57d5d86a30ef407ba01321cef512b9d2782e6f9f4a461d9cadc94047e26db5ee24fb0d9e795f90a0009be39971d59900cb6bbf56fa6b1f1199ffff04c170c6a2cacd5e649a52ebc1b6bfe47ba70229a5c903ebd48e3689a6864ec2eea327c74786057e5d161ce86475ec9d1"}`,
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${"41e2063d9f74a60ae06b0ba0c9b569420f3e05574643546a42da7654310be46a1db97f8b565da4489a7d140e0d3b5ec52974bd7b43fb8a73de172f42b273d0958a3dac720a530ec63001e4b8979978e5ab2d605df6d53332d22015fa55b816cd716cda703d6ee6e017afcfd33b9ec1d8b06a2d0beead4915d43825e7f049141f79cdd2a21258e11235661ec30e026c2e7feec73e5b122ca3b4632ccb297c3b232c7ae97dd55bfed3a2b53bb9b350d49a0f468170e8976bd659ea55886a4a53271a7b89c8ce7103ad90b054a1ed08b1783498384888927f2ca7513bf888b3b1d0006ffaa6cb642e1266c6156c3fec312abf302823a3f997eda9c43cf43f119912"}`,
             },
+            withCredentials: true,
           }
         );
 
-        console.log("Product fetched:", res.data);
-        setProductObject(res.data);
+        console.log("Product fetched:", res.data[0]);
+        setProductObject({
+          ...res.data[0],
+          id: res.data[0].product_id,
+          imageMain: res.data[0].image,
+          imagesSecondary: res.data[0].images || [],
+          description: res.data[0].details_description || "",
+          stock: res.data[0].quantity || "",
+        });
       } catch (error: any) {
         toast.error("Erro ao buscar produto", {
-          description: `${error.response.data.error}`,
+          description: `${error.response.data.message}`,
         });
       } finally {
         setSearchProductsIsLoading(false);
@@ -89,20 +98,19 @@ export const useCreateProductsDrawer = create<CreateProductFormProps>(
       const { handleAddVinculationProduct } =
         useVinculationProductsLive.getState();
 
-      console.log("New Product:", liveId);
       try {
         setLoadingCreateProducts(true);
 
         if (isProductLive) {
           const data = {
-            _id: newProduct._id ?? "",
+            id: newProduct.id ?? "",
             name: newProduct.name,
             link: newProduct.link,
             hourStart: newProduct.hourStart ?? "",
             hourEnd: newProduct.hourEnd ?? "",
             price: newProduct.price,
             imageMain: newProduct.imageMain,
-            imagesSecondary: newProduct.imagesSecondary,
+            imagesSecondary: newProduct.imagesSecondary ?? [],
             VinculateId: liveId,
             liveId: liveId,
             userId: user?._id ?? "",
@@ -124,9 +132,11 @@ export const useCreateProductsDrawer = create<CreateProductFormProps>(
             price: newProduct.price,
             description: newProduct.description,
             stock: newProduct.stock,
-            _id: newProduct._id,
+            id: newProduct.id,
           },
         ];
+
+        console.log("produtos", newList);
         setHighlightedProductList(newList);
         await setdb(productsRef, {
           products: newList,
@@ -138,8 +148,16 @@ export const useCreateProductsDrawer = create<CreateProductFormProps>(
           duration: 3000,
         });
       } catch (error: any) {
+        console.log("error ao vincular produto", error);
+        let message = "Erro desconhecido";
+        if (error?.response?.data?.message) {
+          message = error.response.data.message;
+        } else if (error?.message) {
+          message = error.message;
+        }
+        console.error("error ao vincular produto", message);
         toast.error("Erro ao vincular produto", {
-          description: `${error.response.data.error}`,
+          description: message,
         });
       } finally {
         setLoadingCreateProducts(false);
@@ -174,10 +192,10 @@ export const useCreateProductsDrawer = create<CreateProductFormProps>(
       try {
         setLoadingDeleteProduct(true);
         const objectDeleted = highlightedProductList.find(
-          (item) => item._id === productId
+          (item) => item.id === productId
         );
         const newList = highlightedProductList.filter(
-          (item) => item._id !== productId
+          (item) => item.id !== productId
         );
         setHighlightedProductList(newList);
 

@@ -29,6 +29,8 @@ import {
   SelectContent,
   SelectItem,
 } from "../ui/select";
+import { formatImageUrl } from "@/shared/utils/FormtImageUrl";
+import { formatPrice } from "@/shared/utils/formatPrice";
 
 type createProductsDrawerProps = {
   liveId?: string;
@@ -60,7 +62,6 @@ export const CreateProductsDrawer = ({
     searchProductsIsLoading,
     productObject,
     getIdByLink,
-    productId,
     handleCreateProducts,
     handleGetProductById,
   } = useCreateProductsDrawer();
@@ -92,8 +93,8 @@ export const CreateProductsDrawer = ({
               type="button"
               className="bg-blue-500  "
               onClick={() => {
-                getIdByLink(productLinkInput);
-                handleGetProductById(productId ?? "");
+                const idProduct = getIdByLink(productLinkInput);
+                handleGetProductById(idProduct ?? "");
               }}
             >
               {searchProductsIsLoading ? (
@@ -103,12 +104,12 @@ export const CreateProductsDrawer = ({
               )}
             </Button>
           </section>
-          {productObject?._id && (
+          {productObject?.id && (
             <section className="w-full grid gap-5 mt-10">
               <h1>
                 Produto ID:{" "}
                 <span className=" px-2 py-1 bg-purple-100 rounded-lg text-purple-600 ">
-                  {productObject._id}
+                  {productObject.id}
                 </span>{" "}
               </h1>
 
@@ -118,7 +119,9 @@ export const CreateProductsDrawer = ({
                   <div className="w-full flex flex-col justify-center items-center my-3">
                     <img
                       className="w-40 object-cover rounded-lg mt-5"
-                      src={productObject?.imageMain}
+                      src={`https://sampa.buscabusca.com.br/image/${formatImageUrl(
+                        productObject?.imageMain ?? ""
+                      )}`}
                       alt=""
                     />
 
@@ -131,13 +134,15 @@ export const CreateProductsDrawer = ({
                       >
                         <CarouselContent className="w-full flex justify-center">
                           {productObject?.imagesSecondary?.map(
-                            (image, index) => (
+                            (item, index) => (
                               <CarouselItem key={index} className="basis-1/3">
                                 <div className="p-1">
                                   <Card>
                                     <img
                                       className="w-24  object-cover rounded-lg"
-                                      src={image}
+                                      src={`https://sampa.buscabusca.com.br/image/${formatImageUrl(
+                                        item.image ?? ""
+                                      )}`}
                                       alt=""
                                     />
                                   </Card>
@@ -155,18 +160,14 @@ export const CreateProductsDrawer = ({
 
                 <div className="my-5">
                   <Label>Nome</Label>
-                  <Input
-                    className="mt-2"
-                    value={"CAMERA IP WIFI INTELIGENTE 8177"}
-                    readOnly
-                  />
+                  <Input className="mt-2" value={productObject.name} readOnly />
                 </div>
 
                 <div>
                   <Label>Preço</Label>
                   <Input
                     className="mt-2"
-                    value={productObject?.price}
+                    value={formatPrice(Number(productObject?.price))}
                     readOnly
                   />
                 </div>
@@ -175,7 +176,11 @@ export const CreateProductsDrawer = ({
                   <Label>Descrição</Label>
                   <Input
                     className="mt-2"
-                    value={"Descrição do produto..."}
+                    value={
+                      productObject?.description.length > 1
+                        ? productObject?.description
+                        : "Sem descrição do produto"
+                    }
                     readOnly
                   />
                 </div>
@@ -270,7 +275,11 @@ export const CreateProductsDrawer = ({
 
                 <div className="w-full flex justify-between items-center">
                   <Label>Estoque</Label>
-                  <Input className="mt-2 w-3/12" value={"10"} readOnly />
+                  <Input
+                    className="mt-2 w-3/12"
+                    value={productObject?.stock}
+                    readOnly
+                  />
                 </div>
               </section>
 
@@ -308,6 +317,7 @@ export const CreateProductsDrawer = ({
                       liveId: liveId ?? liveVinculateId,
                       newProduct: {
                         ...productObject,
+                        link: productLinkInput,
                         hourStart: productHours.hourStart,
                         hourEnd: productHours.hourEnd,
                       },

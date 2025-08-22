@@ -1,11 +1,15 @@
 import { CreateProductFormSchemaData } from "./createProductsSchema";
 
 export type productObject = {
-  _id: string;
+  id: string;
   name: string;
   link: string;
   imageMain: string;
-  imagesSecondary: string[];
+  imagesSecondary: [
+    {
+      image: string;
+    }
+  ];
   price: string;
   description: string;
   stock: string;
@@ -64,5 +68,5 @@ export interface CreateProductFormProps {
 
   productId: string | null;
   setProductId: (productId: string | null) => void;
-  getIdByLink: (link: string) => Promise<string | null>;
+  getIdByLink: (link: string) => string | null;
 }
