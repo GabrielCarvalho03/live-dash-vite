@@ -1,6 +1,6 @@
 import { Button } from "@/shared/components/ui/button";
 import { useCreateProductsDrawer } from "@/shared/hooks/useCreateProductsDrawer/useCreateProductsDrawer";
-import { InboxIcon, ShoppingBasket } from "lucide-react";
+import { ShoppingBasket } from "lucide-react";
 
 export const NotProductsInHighlight = () => {
   const { setOpenModalCreateProducts } = useCreateProductsDrawer();

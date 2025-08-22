@@ -7,7 +7,7 @@ type handleChangePasswordFirstAcessProps = {
 
 type handleDeleteLiveProps = {
   id: string;
-  setActualLive: React.Dispatch<React.SetStateAction<liveObject | undefined>>;
+  setActualLive: (live: liveObject | undefined) => void;
 };
 
 type sendMessageProps = {
@@ -17,6 +17,8 @@ type sendMessageProps = {
 };
 
 export interface useDashboardProps {
+  actualLive: liveObject | undefined;
+  setActualLive: (live: liveObject | undefined) => void;
   changePasswordIsLoading: boolean;
   setChangePasswordIsLoading: (value: boolean) => void;
 

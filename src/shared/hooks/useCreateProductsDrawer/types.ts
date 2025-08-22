@@ -9,11 +9,14 @@ export type productObject = {
   price: string;
   description: string;
   stock: string;
+  hourStart?: string;
+  hourEnd?: string;
 };
 
 export type handleCreateProductsProps = {
   liveId: string;
   newProduct: productObject;
+  isProductLive: boolean;
 };
 
 export type handleDeleteProductProps = {
@@ -32,6 +35,7 @@ export interface CreateProductFormProps {
   handleCreateProducts: ({
     liveId,
     newProduct,
+    isProductLive,
   }: handleCreateProductsProps) => Promise<void>;
 
   loadingDeleteProduct: boolean;

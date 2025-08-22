@@ -14,12 +14,21 @@ import {
 import * as Player from "@livepeer/react/player";
 import * as Popover from "@radix-ui/react-popover";
 import { CheckIcon, ChevronDownIcon, XIcon } from "lucide-react";
-import React, { useCallback, useTransition } from "react";
+import React, { useCallback, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Src } from "@livepeer/react";
+import { useVinculationProductsLive } from "@/modules/live/hooks/useVinculationProducts";
 
-export function PlayerWithControls(props: { src: Src[] | null }) {
+export function PlayerWithControls(props: {
+  src: Src[] | null;
+  onTimeUpdate?: (horaMinuto: string, currentSeconds: number) => void;
+  startSeconds?: number;
+}) {
+  const lastHoraMinutoRef = useRef<string>("");
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const restoredRef = useRef(false);
+
   if (!props.src) {
     return (
       <PlayerLoading
@@ -36,6 +45,20 @@ export function PlayerWithControls(props: { src: Src[] | null }) {
           title="Live stream"
           playsInline
           className={cn("h-full w-full transition")}
+          ref={videoRef}
+          onTimeUpdate={(e) => {
+            const video = e.currentTarget as HTMLVideoElement;
+            const seconds = Math.floor(video.currentTime);
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const horaMinuto = `${String(hours).padStart(2, "0")}:${String(
+              minutes
+            ).padStart(2, "0")}`;
+            if (lastHoraMinutoRef.current !== horaMinuto) {
+              lastHoraMinutoRef.current = horaMinuto;
+              props.onTimeUpdate?.(horaMinuto, seconds);
+            }
+          }}
         />
 
         <Player.LoadingIndicator className="w-full relative h-full bg-black/50 backdrop-blur data-[visible=true]:animate-in data-[visible=false]:animate-out data-[visible=false]:fade-out-0 data-[visible=true]:fade-in-0">

@@ -17,7 +17,7 @@ let isRefreshing = false;
 let waiters: ((token: string) => void)[] = [];
 
 LiveApi.interceptors.request.use(async (req) => {
-  const token = GetTokenUser();
+  let token = GetTokenUser();
   const refreshToken = localStorage.getItem("liveRefreshToken");
   const isPublicRoute = ["/", "/login", "/signup"].includes(
     window.location.pathname
@@ -37,7 +37,10 @@ LiveApi.interceptors.request.use(async (req) => {
   const tokenIsExpired = dayjs.unix(decodeToken?.exp).diff(dayjs()) < 300;
 
   console.log("Token expirado:", tokenIsExpired);
-  console.log("Tempo restante:", dayjs.unix(decodeToken?.exp).diff(dayjs()));
+  console.log(
+    "Tempo restante:",
+    dayjs.unix(decodeToken?.exp).format("HH:mm:ss")
+  );
 
   if (tokenIsExpired && refreshToken) {
     if (isRefreshing) {
@@ -45,9 +48,12 @@ LiveApi.interceptors.request.use(async (req) => {
       await new Promise((resolve) => {
         waiters.push((newToken) => {
           req.headers.Authorization = `${newToken}`;
+          console.log("[waiters] Novo token aplicado:");
           resolve(null);
         });
       });
+      // Atualiza token após refresh
+      token = GetTokenUser();
     } else {
       isRefreshing = true;
       try {
@@ -58,6 +64,10 @@ LiveApi.interceptors.request.use(async (req) => {
         const newToken = response.data.token;
         const newRefreshToken = response.data.refreshToken;
 
+        if (!newToken || !newRefreshToken) {
+          throw new Error("Token ou refreshToken não retornados pelo backend");
+        }
+
         const { setToken, setRefreshToken } = useAuthStore.getState();
         localStorage.setItem("liveToken", newToken);
         localStorage.setItem("liveRefreshToken", newRefreshToken);
@@ -65,11 +75,15 @@ LiveApi.interceptors.request.use(async (req) => {
         setRefreshToken(newRefreshToken);
 
         req.headers.Authorization = `${newToken}`;
+        console.log("[refresh]  salvo e aplicado:", newToken);
 
         waiters.forEach((w) => w(newToken));
         waiters = [];
+        // Atualiza token após refresh
+        token = newToken;
       } catch (err: any) {
         console.error("Erro ao renovar token:", err);
+        console.error("Detalhes do erro:", err?.response?.data);
         // Só fazer logout se for erro de autenticação específico
         if (err.response?.status === 401 || err.response?.status === 403) {
           localStorage.clear();
@@ -80,7 +94,10 @@ LiveApi.interceptors.request.use(async (req) => {
         isRefreshing = false;
       }
     }
-  } else if (token && !tokenIsExpired) {
+  }
+
+  // Sempre atualiza o header com o token mais recente
+  if (token) {
     req.headers.Authorization = `${token}`;
   }
 

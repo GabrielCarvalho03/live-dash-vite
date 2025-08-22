@@ -8,6 +8,8 @@ import { LiveApi } from "@/lib/api/liveApi";
 import { useLive } from "@/modules/live/hooks/useLive";
 
 export const useDashboard = create<useDashboardProps>((set) => ({
+  actualLive: undefined,
+  setActualLive: (live) => set({ actualLive: live }),
   changePasswordIsLoading: false,
   setChangePasswordIsLoading: (changePasswordIsLoading: boolean) =>
     set({ changePasswordIsLoading }),
