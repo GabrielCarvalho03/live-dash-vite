@@ -55,20 +55,41 @@ export const useVinculationProductsLive = create<VinculationProduct>((set) => ({
   ) => set({ vinculationProductsObject }),
 
   handleAddVinculationProduct: async (data) => {
-    const { setLoadingVinculationProduct } =
-      useVinculationProductsLive.getState();
+    const {
+      allVinculationProducts,
+      setLoadingVinculationProduct,
+      setAllViculationProducts,
+      setAllViculationProductsFiltered,
+    } = useVinculationProductsLive.getState();
     const { liveEditObject } = useLive.getState();
     const token = GetTokenUser();
     try {
       setLoadingVinculationProduct(true);
 
-      const objToCreateVinculationProduct = {
-        products: data.products,
-        userId: liveEditObject?.userId,
-        liveId: liveEditObject?._id,
+      const dataToSave = {
+        _id: data._id,
+        name: data.name,
+        link: data.link,
+        hourStart: data.hourStart,
+        hourEnd: data.hourEnd,
+        price: data.price,
+        imageMain: data.imageMain,
+        imagesSecondary: data.imagesSecondary,
+        liveId: data.liveId,
+        userId: data.userId,
       };
 
-      const res = await LiveApi.post(
+      const objToCreateVinculationProduct = {
+        products: [
+          {
+            ...dataToSave,
+          },
+        ],
+        userId: data?.userId,
+        liveId: data?.liveId ?? liveEditObject?._id,
+      };
+
+      await LiveApi.post(
         "/live/product/vinculation",
         objToCreateVinculationProduct,
         {
@@ -77,7 +98,12 @@ export const useVinculationProductsLive = create<VinculationProduct>((set) => ({
           },
         }
       );
-      toast.success("Produto vinculado com sucesso");
+      setAllViculationProducts([...allVinculationProducts, dataToSave]);
+      setAllViculationProductsFiltered([...allVinculationProducts, dataToSave]);
+
+      toast.success("Produto vinculado com sucesso", {
+        description: `O produto ${data.name} foi vinculado com sucesso!`,
+      });
     } catch (error: any) {
       toast.error("Erro ao vincular produto", {
         description: `${error.response.data.error}`,

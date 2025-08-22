@@ -81,13 +81,14 @@ export const FilterProductContent = () => {
           className="hover:bg-blue-500 hover:text-white "
           onClick={() => setOpenModalCreateProducts(true)}
         >
-          <Plus className="w-4 h-4 mr-2" /> Nova Live
+          <Plus className="w-4 h-4 mr-2" /> Novo Produto
         </Button>
       </div>
 
       <CreateProductsDrawer
         loading={loadingCreateProducts}
         isOpen={openModalCreateProducts}
+        isProductLive
         onClose={() => setOpenModalCreateProducts(false)}
       />
     </main>

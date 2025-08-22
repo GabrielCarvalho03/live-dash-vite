@@ -102,7 +102,18 @@ export interface VinculationProduct {
   setLoadingVinculationProduct: (value: boolean) => void;
 
   handleAddVinculationProduct: (
-    data: VinculationProductsLiveSchemaData
+    data: VinculationProductsLiveSchemaData & {
+      _id: string;
+      name: string;
+      link: string;
+      hourStart: string;
+      hourEnd: string;
+      price: string;
+      imageMain: string;
+      imagesSecondary: string[];
+      liveId: string;
+      userId: string;
+    }
   ) => Promise<void>;
 
   loadingisGetAllVinculationProduct: boolean;

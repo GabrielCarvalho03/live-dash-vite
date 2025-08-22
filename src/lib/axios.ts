@@ -18,7 +18,7 @@ let isRefreshing = false;
 let waiters: ((token: string) => void)[] = [];
 
 api.interceptors.request.use(async (req) => {
-  const token = GetTokenUser();
+  let token = GetTokenUser();
   const refreshToken = localStorage.getItem("liveRefreshToken");
   const isPublicRoute = ["/", "/login", "/signup"].includes(
     window.location.pathname
@@ -46,9 +46,12 @@ api.interceptors.request.use(async (req) => {
       await new Promise((resolve) => {
         waiters.push((newToken) => {
           req.headers.Authorization = `${newToken}`;
+          console.log("[waiters] Novo token aplicado:");
           resolve(null);
         });
       });
+      // Atualiza token após refresh
+      token = GetTokenUser();
     } else {
       isRefreshing = true;
       try {
@@ -59,6 +62,10 @@ api.interceptors.request.use(async (req) => {
         const newToken = response.data.token;
         const newRefreshToken = response.data.refreshToken;
 
+        if (!newToken || !newRefreshToken) {
+          throw new Error("Token ou refreshToken não retornados pelo backend");
+        }
+
         const { setToken, setRefreshToken } = useAuthStore.getState();
         localStorage.setItem("liveToken", newToken);
         localStorage.setItem("liveRefreshToken", newRefreshToken);
@@ -66,11 +73,16 @@ api.interceptors.request.use(async (req) => {
         setRefreshToken(newRefreshToken);
 
         req.headers.Authorization = `${newToken}`;
+        console.log("[refresh] Novo token salvo e aplicado:");
 
         waiters.forEach((w) => w(newToken));
         waiters = [];
+        // Atualiza token após refresh
+        token = newToken;
       } catch (err: any) {
         console.error("Erro ao renovar token:", err);
+        console.error("Detalhes do erro:", err?.response?.data);
+        // Só fazer logout se for erro de autenticação específico
         if (err.response?.status === 401 || err.response?.status === 403) {
           localStorage.clear();
           window.location.href = "/";
@@ -80,7 +92,10 @@ api.interceptors.request.use(async (req) => {
         isRefreshing = false;
       }
     }
-  } else if (token && !tokenIsExpired) {
+  }
+
+  // Sempre atualiza o header com o token mais recente
+  if (token) {
     req.headers.Authorization = `${token}`;
   }
 

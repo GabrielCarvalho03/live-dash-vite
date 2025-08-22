@@ -19,13 +19,22 @@ import {
 } from "@/shared/components/ui/carousel";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { Card, CardContent } from "../ui/card";
+import { Card } from "../ui/card";
 import { useCreateProductsDrawer } from "@/shared/hooks/useCreateProductsDrawer/useCreateProductsDrawer";
+import { useLive } from "@/modules/live/hooks/useLive";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "../ui/select";
 
 type createProductsDrawerProps = {
   liveId?: string;
   isOpen: boolean;
   loading: boolean;
+  isProductLive?: boolean;
   onClose: () => void;
 };
 
@@ -33,16 +42,29 @@ export const CreateProductsDrawer = ({
   liveId,
   isOpen,
   loading,
+  isProductLive,
   onClose,
 }: createProductsDrawerProps) => {
   const [productLinkInput, setProductLinkInput] = useState("");
+  const [liveVinculateId, setLiveVinculateId] = useState("");
+  const [productHours, setProductHours] = useState({
+    hourStart: "",
+    hourEnd: "",
+  });
+  const [formErrors, setFormErrors] = useState({
+    liveVinculateId: "",
+    hourStart: "",
+    hourEnd: "",
+  });
   const {
     searchProductsIsLoading,
     productObject,
     getIdByLink,
+    productId,
     handleCreateProducts,
     handleGetProductById,
   } = useCreateProductsDrawer();
+  const { liveList } = useLive();
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -70,10 +92,8 @@ export const CreateProductsDrawer = ({
               type="button"
               className="bg-blue-500  "
               onClick={() => {
-                getIdByLink(
-                  "https://sampa.buscabusca.com.br/index.php?route=product/product&product_id=9980"
-                );
-                handleGetProductById("1344");
+                getIdByLink(productLinkInput);
+                handleGetProductById(productId ?? "");
               }}
             >
               {searchProductsIsLoading ? (
@@ -144,7 +164,11 @@ export const CreateProductsDrawer = ({
 
                 <div>
                   <Label>Preço</Label>
-                  <Input className="mt-2" value={"R$ 500,00"} readOnly />
+                  <Input
+                    className="mt-2"
+                    value={productObject?.price}
+                    readOnly
+                  />
                 </div>
 
                 <div className="my-5">
@@ -155,6 +179,94 @@ export const CreateProductsDrawer = ({
                     readOnly
                   />
                 </div>
+
+                {isProductLive && (
+                  <>
+                    <div className="my-5 w-full flex justify-between items-center gap-3">
+                      <div className=" w-6/12">
+                        <Label>Hora inicial</Label>
+                        <Input
+                          type="time"
+                          className="mt-2"
+                          value={productHours.hourStart}
+                          onChange={(e) => {
+                            setProductHours((prev) => ({
+                              ...prev,
+                              hourStart: e.target.value,
+                            }));
+                            setFormErrors((prev) => ({
+                              ...prev,
+                              hourStart: "",
+                            }));
+                          }}
+                        />
+                        {formErrors.hourStart && (
+                          <span className="text-red-500 text-xs mt-1 block">
+                            {formErrors.hourStart}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className=" w-6/12">
+                        <Label>Hora final</Label>
+                        <Input
+                          type="time"
+                          className="mt-2"
+                          value={productHours.hourEnd}
+                          onChange={(e) => {
+                            setProductHours((prev) => ({
+                              ...prev,
+                              hourEnd: e.target.value,
+                            }));
+                            setFormErrors((prev) => ({ ...prev, hourEnd: "" }));
+                          }}
+                        />
+                        {formErrors.hourEnd && (
+                          <span className="text-red-500 text-xs mt-1 block">
+                            {formErrors.hourEnd}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="my-5">
+                      <div className="mb-3">
+                        <Label>Live vinculada</Label>
+                      </div>
+
+                      <Select
+                        defaultValue={liveList[0]?._id}
+                        value={liveVinculateId}
+                        onValueChange={async (e) => {
+                          const actualLive = liveList.find(
+                            (item) => item._id == e
+                          );
+                          setLiveVinculateId(actualLive?._id ?? "");
+                          setFormErrors((prev) => ({
+                            ...prev,
+                            liveVinculateId: "",
+                          }));
+                        }}
+                      >
+                        <SelectTrigger className=" w-full">
+                          <SelectValue placeholder="Escolha a live para ser vinculada ao produto" />
+                        </SelectTrigger>
+                        <SelectContent className="">
+                          {liveList?.map((item) => (
+                            <SelectItem value={item._id}>
+                              {item.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {formErrors.liveVinculateId && (
+                        <span className="text-red-500 text-xs mt-1 block">
+                          {formErrors.liveVinculateId}
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
 
                 <div className="w-full flex justify-between items-center">
                   <Label>Estoque</Label>
@@ -169,12 +281,39 @@ export const CreateProductsDrawer = ({
 
                 <Button
                   disabled={loading}
-                  onClick={() =>
+                  onClick={() => {
+                    let errors = {
+                      liveVinculateId: "",
+                      hourStart: "",
+                      hourEnd: "",
+                    };
+                    let valid = true;
+                    if (isProductLive) {
+                      if (!liveVinculateId) {
+                        errors.liveVinculateId = "Selecione uma live";
+                        valid = false;
+                      }
+                      if (!productHours.hourStart) {
+                        errors.hourStart = "Informe a hora inicial";
+                        valid = false;
+                      }
+                      if (!productHours.hourEnd) {
+                        errors.hourEnd = "Informe a hora final";
+                        valid = false;
+                      }
+                    }
+                    setFormErrors(errors);
+                    if (!valid) return;
                     handleCreateProducts({
-                      liveId: liveId ?? "",
-                      newProduct: productObject,
-                    })
-                  }
+                      liveId: liveId ?? liveVinculateId,
+                      newProduct: {
+                        ...productObject,
+                        hourStart: productHours.hourStart,
+                        hourEnd: productHours.hourEnd,
+                      },
+                      isProductLive: isProductLive ?? false,
+                    });
+                  }}
                   className="bg-blue-500  "
                 >
                   {loading ? <Loader2 className="animate-spin" /> : "Salvar"}

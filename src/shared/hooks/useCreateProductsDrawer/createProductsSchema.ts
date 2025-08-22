@@ -1,8 +1,4 @@
-import { useLive } from "@/modules/live/hooks/useLive";
-import dayjs from "dayjs";
 import z from "zod";
-
-const { liveEditObject } = useLive.getState();
 
 export const CreateProductFormSchema = z.object({
   name: z.string().min(3, "Nome do produto é obrigatório"),

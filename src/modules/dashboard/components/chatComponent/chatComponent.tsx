@@ -22,13 +22,12 @@ export const ChatComponent = ({ liveId }: ChatComponentProps) => {
   const { user } = useLogin();
   const { liveList } = useLive();
 
-  console.log("liveId:", liveId);
   const actualLive = liveList?.find((live) => live._id === liveId);
 
   useEffect(() => {
     setAllMessages([]);
 
-    const chatRef = ref(db, `live_chat`);
+    const chatRef = ref(db, `live_chat/${liveId}`);
     const unsubscribe = onValue(chatRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -56,7 +55,7 @@ export const ChatComponent = ({ liveId }: ChatComponentProps) => {
 
   const handleSendMessage = async () => {
     if (!messageText.trim()) return;
-    const chatRef = ref(db, `live_chat`);
+    const chatRef = ref(db, `live_chat/${liveId}`);
     setMessageText("");
 
     await push(chatRef, {
